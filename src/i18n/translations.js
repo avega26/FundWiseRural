@@ -1,0 +1,1075 @@
+export const defaultLanguage = 'en';
+
+export const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'fr', label: 'French' },
+];
+
+export const countryOptions = [
+  { value: 'spain', labelKey: 'spain' },
+  { value: 'italy', labelKey: 'italy' },
+  { value: 'poland', labelKey: 'poland' },
+  { value: 'france', labelKey: 'france' },
+];
+
+export const businessTypeOptions = [
+  { value: 'farm', labelKey: 'farm' },
+  { value: 'agriTourism', labelKey: 'agriTourism' },
+  { value: 'foodProducer', labelKey: 'foodProducer' },
+  { value: 'manufacturer', labelKey: 'manufacturer' },
+  { value: 'retail', labelKey: 'retail' },
+  { value: 'service', labelKey: 'service' },
+];
+
+export const businessSizeOptions = [
+  { value: 'micro', labelKey: 'micro' },
+  { value: 'small', labelKey: 'small' },
+  { value: 'medium', labelKey: 'medium' },
+];
+
+export const agricultureSubTypeOptions = [
+  { value: 'flowersHorticulture', labelKey: 'flowersHorticulture' },
+  { value: 'fieldCrops', labelKey: 'fieldCrops' },
+  { value: 'livestock', labelKey: 'livestock' },
+  { value: 'greenhouse', labelKey: 'greenhouse' },
+  { value: 'irrigationWater', labelKey: 'irrigationWater' },
+  { value: 'mixedAgriculture', labelKey: 'mixedAgriculture' },
+];
+
+export const yearsOptions = [
+  { value: '0-1', labelKey: '0-1' },
+  { value: '2-5', labelKey: '2-5' },
+  { value: '6+', labelKey: '6+' },
+];
+
+export const mainGoalOptions = [
+  { value: 'expandOperations', labelKey: 'expandOperations' },
+  { value: 'buyEquipment', labelKey: 'buyEquipment' },
+  { value: 'digitize', labelKey: 'digitize' },
+  { value: 'sustainabilityUpgrade', labelKey: 'sustainabilityUpgrade' },
+  { value: 'hireStaff', labelKey: 'hireStaff' },
+];
+
+export const ruralAreaOptions = [
+  { value: 'yes', labelKey: 'yes' },
+  { value: 'no', labelKey: 'no' },
+];
+
+export const specialTagOptions = [
+  { value: 'womenOwned', labelKey: 'womenOwned' },
+  { value: 'youthOwned', labelKey: 'youthOwned' },
+  { value: 'cooperative', labelKey: 'cooperative' },
+  { value: 'sustainable', labelKey: 'sustainable' },
+  { value: 'innovative', labelKey: 'innovative' },
+];
+
+export const regionsByCountry = {
+  spain: [
+    { value: 'andalusia', label: 'Andalusia' },
+    { value: 'catalonia', label: 'Catalonia' },
+    { value: 'valencia', label: 'Valencia' },
+    { value: 'galicia', label: 'Galicia' },
+  ],
+  italy: [
+    { value: 'sicily', label: 'Sicily' },
+    { value: 'lombardy', label: 'Lombardy' },
+    { value: 'tuscany', label: 'Tuscany' },
+    { value: 'veneto', label: 'Veneto' },
+  ],
+  poland: [
+    { value: 'mazowieckie', label: 'Mazowieckie' },
+    { value: 'malopolskie', label: 'Malopolskie' },
+    { value: 'wielkopolskie', label: 'Wielkopolskie' },
+    { value: 'podkarpackie', label: 'Podkarpackie' },
+  ],
+  france: [
+    { value: 'ileDeFrance', label: 'Ile-de-France' },
+    { value: 'occitanie', label: 'Occitanie' },
+    { value: 'nouvelleAquitaine', label: 'Nouvelle-Aquitaine' },
+    { value: 'provenceAlpesCoteDAzur', label: 'Provence-Alpes-Cote d’Azur' },
+  ],
+};
+
+export const translations = {
+  en: {
+    badge: 'Pilot prototype',
+    subtitle:
+      'An EU Commission prototype helping rural businesses find relevant EU funding opportunities',
+    publicDescriptionTitle: 'What this tool does',
+    publicDescription:
+      'FundWise Rural helps rural businesses understand which EU funding route may fit their project before they navigate official programme websites. The tool combines business profile information, regional programme logic, and AI-assisted interpretation to highlight likely CAP and ERDF pathways. It is designed to save time, reduce confusion, and help applicants prepare stronger first-step materials before moving to the official application route.',
+    footerNote:
+      'Prototype for academic demonstration only. Final eligibility is determined by official programme rules.',
+    intakeEyebrow: 'Business Profile',
+    intakeTitle: 'Tell us about the business and project.',
+    intakeDescription:
+      'Complete the profile below to generate tailored prototype recommendations for EU rural funding opportunities.',
+    resultsEyebrow: 'Funding Results',
+    resultsTitle: 'Your Funding Recommendations',
+    resultsDescription:
+      'Review the strongest prototype matches below and use them as a starting point for further programme research.',
+    resultsPlaceholder: 'Your recommended funding opportunities will appear here.',
+    generating: 'Generating recommendations...',
+    noMatches: 'No strong matches found. Try adjusting your business profile.',
+    aiDisclaimer:
+      'This recommendation is AI-assisted and may prefill guidance text, but applicants should verify all details against the official programme criteria before submitting.',
+    aiProfileReview: 'AI Profile Review',
+    aiReasoningTrace: 'AI Reasoning Trace',
+    confidenceLevel: 'Confidence level',
+    consistencyStatus: 'Consistency status',
+    primaryRoute: 'Primary route',
+    rankingRationale: 'Ranking rationale',
+    detectedSignals: 'Detected signals',
+    metricsButton: 'View metrics',
+    metricsTitle: 'Demo metrics',
+    metricsDisclaimer:
+      'These counts are stored locally in this browser for prototype testing only.',
+    metricsUsers: 'Number of users',
+    metricsCompletedSearches: 'Completed Find Funding searches',
+    metricsCompletionRate: 'Completion rate',
+    metricsApplicationClicks: 'External application clicks',
+    metricsClickThroughRate: 'Application click-through rate',
+    metricsSatisfactionResponses: 'Satisfaction responses',
+    metricsSatisfactionScore: 'User satisfaction score',
+    metricsClickThroughNote:
+      'For this prototype, click-through rate is calculated locally as external application clicks divided by completed Find Funding searches.',
+    metricsReset: 'Reset metrics',
+    helpfulQuestion: 'Was this result helpful?',
+    helpfulYes: 'Yes',
+    helpfulNo: 'No',
+    startOver: 'Start Over',
+    findFunding: 'Find Funding',
+    useDemoProfile: 'Use Demo Profile',
+    demoCapProfile: 'CAP Demo',
+    demoErdfProfile: 'ERDF Demo',
+    demoMixedProfile: 'Mixed Demo',
+    selectPlaceholder: 'Please select',
+    regionPlaceholder: 'Select a region',
+    businessNamePlaceholder: 'Enter your business name',
+    additionalContextPlaceholder:
+      'Describe your business, your project, or anything else you want the system to consider. For example: we run a family-owned rural tourism business and want funding to improve our website and sustainability practices.',
+    additionalContextHelp:
+      'Use this box to describe the project in plain language. Mention things like equipment, sustainability, website upgrades, bookings, crops, or customer needs.',
+    summary: (fundType, businessName) =>
+      businessName
+        ? `Based on ${businessName}'s profile, ${fundType} funding appears most relevant.`
+        : `Based on your profile, ${fundType} funding appears most relevant.`,
+    viewProgramme: (fundType) => `View ${fundType} Programme`,
+    openProgrammePage: (fundType) =>
+      fundType === 'CAP' ? 'Open CAP application page' : 'Open ERDF programme page',
+    openOfficialInfo: 'Open official programme info',
+    whatToPrepare: 'What to prepare',
+    nextStep: 'Next step:',
+    draftSupport: 'Draft application support',
+    topMatch: 'Top match',
+    reviewedLinkLabel: 'Official route checked',
+    scoringInfoTitle: 'How scoring works',
+    scoringInfoIntro:
+      'The fit score is a prototype guidance score. It combines structured programme matching with context interpretation to show how closely the business aligns with the route.',
+    scoringInfoOutro:
+      'This is not a legal eligibility decision. Final eligibility still depends on the live call, official documents, and authority review.',
+    fitScore: 'Eligibility fit score',
+    pointBreakdown: 'Point breakdown',
+    businessTypeFit: 'Business type alignment',
+    businessTypeFitDescription:
+      'Business type alignment checks whether the business category matches the programme’s intended applicants.',
+    projectGoalFit: 'Project goal alignment',
+    projectGoalFitDescription:
+      'Project goal alignment checks whether the stated objective fits what the programme usually funds.',
+    ruralFit: 'Rural / territorial fit',
+    ruralFitDescription:
+      'Rural / territorial fit checks whether the route expects rural activity or a strong place-based justification.',
+    sizeFit: 'Business size fit',
+    sizeFitDescription:
+      'Business size fit checks whether the company size sits inside the programme’s likely beneficiary range.',
+    contextFit: 'Context and signal fit',
+    contextFitDescription:
+      'Context and signal fit uses the written business context to detect agricultural, digital, service, or mixed signals.',
+    routeFit: 'Programme route fit',
+    routeFitDescription:
+      'Programme route fit gives extra weight when the recommendation matches a country- and region-specific programme route.',
+    routeDetails: 'Route Details',
+    estimatedTimeline: 'Estimated timeline',
+    timelineOverview: 'Timing overview',
+    programmeSummary: 'What this programme is',
+    programme: 'Programme',
+    country: 'Country',
+    region: 'Region',
+    authority: 'Authority',
+    projectSummary: 'Project summary',
+    fitReason: 'Why this may fit',
+    applicationAngle: 'Suggested application angle',
+    evidenceToPrepare: 'Evidence to prepare',
+    preSubmissionChecklist: 'Pre-submission checklist',
+    firstAuthorityQuestion: 'Question to ask the authority',
+    clarificationPoint: 'Clarification point',
+    verifyBeforeSubmit: 'Verify before submitting',
+    downloadResults: 'Download results',
+    reviewLabels: {
+      high: 'High',
+      medium: 'Medium',
+      low: 'Low',
+      consistent: 'Consistent',
+      mixed: 'Mixed',
+      conflicting: 'Conflicting',
+      cap: 'CAP-led',
+      erdf: 'ERDF-led',
+    },
+    labels: {
+      preferredLanguage: 'Preferred Language',
+      businessName: 'Business Name',
+      country: 'Country',
+      region: 'Region',
+      businessType: 'Business Type',
+      agricultureSubType: 'Agriculture Sub-type',
+      businessSize: 'Business Size (EU SME definition)',
+      yearsInOperation: 'Years in Operation',
+      mainGoal: 'Main Goal',
+      ruralArea: 'Rural Area',
+      specialTags: 'Special Tags',
+      additionalContext: 'Additional Business Context (optional)',
+    },
+    countries: {
+      spain: 'Spain',
+      italy: 'Italy',
+      poland: 'Poland',
+      france: 'France',
+    },
+    businessTypes: {
+      farm: 'Farm',
+      agriTourism: 'Agri-tourism',
+      foodProducer: 'Food Producer',
+      manufacturer: 'Manufacturer',
+      retail: 'Retail',
+      service: 'Service',
+    },
+    businessSizes: {
+      micro: 'Micro: under 10 employees and up to EUR 2 million turnover or balance sheet',
+      small: 'Small: under 50 employees and up to EUR 10 million turnover or balance sheet',
+      medium: 'Medium: under 250 employees and up to EUR 50 million turnover or EUR 43 million balance sheet',
+    },
+    agricultureSubTypes: {
+      flowersHorticulture: 'Flowers / horticulture',
+      fieldCrops: 'Field crops',
+      livestock: 'Livestock',
+      greenhouse: 'Greenhouse / controlled growing',
+      irrigationWater: 'Irrigation / water systems',
+      mixedAgriculture: 'Mixed agriculture',
+    },
+    years: {
+      '0-1': '0-1',
+      '2-5': '2-5',
+      '6+': '6+',
+    },
+    goals: {
+      expandOperations: 'Expand operations',
+      buyEquipment: 'Buy equipment',
+      digitize: 'Digitize',
+      sustainabilityUpgrade: 'Sustainability upgrade',
+      hireStaff: 'Hire staff',
+    },
+    ruralAreaOptions: {
+      yes: 'Yes',
+      no: 'No',
+    },
+    tags: {
+      womenOwned: 'Women-owned',
+      youthOwned: 'Youth-owned',
+      cooperative: 'Cooperative',
+      sustainable: 'Sustainable',
+      innovative: 'Innovative',
+    },
+    eligibility: {
+      likely: 'Likely',
+      possible: 'Possible',
+      unlikely: 'Unlikely',
+    },
+  },
+  es: {
+    badge: 'Prototipo piloto',
+    subtitle:
+      'Un prototipo de la Comisión Europea que ayuda a las empresas rurales a encontrar oportunidades de financiación de la UE relevantes',
+    publicDescriptionTitle: 'Qué hace esta herramienta',
+    publicDescription:
+      'FundWise Rural ayuda a las empresas rurales a entender qué vía de financiación de la UE puede ajustarse mejor a su proyecto antes de navegar por sitios oficiales. La herramienta combina el perfil empresarial, la lógica regional de los programas y una interpretación asistida por IA para destacar rutas probables de CAP y ERDF. Está diseñada para ahorrar tiempo, reducir la confusión y ayudar a preparar mejores materiales iniciales antes de pasar a la vía oficial de solicitud.',
+    footerNote:
+      'Prototipo solo para demostración académica. La elegibilidad final la determinan las normas oficiales del programa.',
+    intakeEyebrow: 'Perfil empresarial',
+    intakeTitle: 'Cuéntenos sobre la empresa y el proyecto.',
+    intakeDescription:
+      'Complete el perfil a continuación para generar recomendaciones prototipo adaptadas sobre oportunidades de financiación rural de la UE.',
+    resultsEyebrow: 'Resultados de financiación',
+    resultsTitle: 'Sus recomendaciones de financiación',
+    resultsDescription:
+      'Revise las coincidencias prototipo más sólidas a continuación y utilícelas como punto de partida para seguir investigando programas.',
+    resultsPlaceholder: 'Sus oportunidades de financiación recomendadas aparecerán aquí.',
+    generating: 'Generando recomendaciones...',
+    noMatches: 'No se encontraron coincidencias sólidas. Intente ajustar el perfil de su empresa.',
+    aiDisclaimer:
+      'Esta recomendación está asistida por IA y puede rellenar texto de orientación, pero los solicitantes deben verificar todos los detalles con los criterios oficiales del programa antes de presentar la solicitud.',
+    aiProfileReview: 'Revisión del perfil por IA',
+    aiReasoningTrace: 'Trazado de razonamiento de IA',
+    confidenceLevel: 'Nivel de confianza',
+    consistencyStatus: 'Estado de coherencia',
+    primaryRoute: 'Ruta principal',
+    rankingRationale: 'Lógica de clasificación',
+    detectedSignals: 'Señales detectadas',
+    metricsButton: 'Ver métricas',
+    metricsTitle: 'Métricas demo',
+    metricsDisclaimer:
+      'Estos datos se guardan localmente en este navegador solo para pruebas del prototipo.',
+    metricsUsers: 'Número de usuarios',
+    metricsCompletedSearches: 'Búsquedas completadas de Buscar financiación',
+    metricsCompletionRate: 'Tasa de finalización',
+    metricsApplicationClicks: 'Clics en solicitud externa',
+    metricsClickThroughRate: 'Tasa de clic hacia solicitud',
+    metricsSatisfactionResponses: 'Respuestas de satisfacción',
+    metricsSatisfactionScore: 'Puntuación de satisfacción',
+    metricsClickThroughNote:
+      'En este prototipo, la tasa de clic se calcula localmente como clics en solicitud externa divididos por búsquedas completadas de Buscar financiación.',
+    metricsReset: 'Restablecer métricas',
+    helpfulQuestion: '¿Fue útil este resultado?',
+    helpfulYes: 'Sí',
+    helpfulNo: 'No',
+    startOver: 'Empezar de nuevo',
+    findFunding: 'Buscar financiación',
+    useDemoProfile: 'Usar perfil de demo',
+    demoCapProfile: 'Demo CAP',
+    demoErdfProfile: 'Demo ERDF',
+    demoMixedProfile: 'Demo mixta',
+    selectPlaceholder: 'Seleccione una opción',
+    regionPlaceholder: 'Seleccione una región',
+    businessNamePlaceholder: 'Introduzca el nombre de su empresa',
+    additionalContextPlaceholder:
+      'Describa su empresa, su proyecto o cualquier otra información que quiera que el sistema tenga en cuenta. Por ejemplo: gestionamos un negocio familiar de turismo rural y queremos financiación para mejorar nuestra web y nuestras prácticas de sostenibilidad.',
+    additionalContextHelp:
+      'Use este campo para describir el proyecto en lenguaje sencillo. Mencione elementos como equipamiento, sostenibilidad, web, reservas, cultivos o necesidades de clientes.',
+    summary: (fundType, businessName) =>
+      businessName
+        ? `Según el perfil de ${businessName}, la financiación ${fundType} parece la más relevante.`
+        : `Según su perfil, la financiación ${fundType} parece la más relevante.`,
+    viewProgramme: (fundType) => `Ver programa ${fundType}`,
+    openProgrammePage: (fundType) =>
+      fundType === 'CAP' ? 'Abrir página de solicitud CAP' : 'Abrir página del programa ERDF',
+    openOfficialInfo: 'Abrir información oficial del programa',
+    whatToPrepare: 'Qué preparar',
+    nextStep: 'Siguiente paso:',
+    draftSupport: 'Apoyo para el borrador de solicitud',
+    topMatch: 'Mejor coincidencia',
+    reviewedLinkLabel: 'Ruta oficial verificada',
+    scoringInfoTitle: 'Cómo funciona la puntuación',
+    scoringInfoIntro:
+      'La puntuación de encaje es una puntuación orientativa del prototipo. Combina el ajuste estructurado del programa con la interpretación del contexto para mostrar hasta qué punto la empresa encaja con la ruta.',
+    scoringInfoOutro:
+      'No es una decisión legal de elegibilidad. La elegibilidad final sigue dependiendo de la convocatoria vigente, de la documentación oficial y de la revisión de la autoridad.',
+    fitScore: 'Puntuación de encaje',
+    pointBreakdown: 'Desglose de puntos',
+    businessTypeFit: 'Alineación del tipo de empresa',
+    businessTypeFitDescription:
+      'La alineación del tipo de empresa comprueba si la categoría del negocio coincide con los beneficiarios previstos del programa.',
+    projectGoalFit: 'Alineación del objetivo',
+    projectGoalFitDescription:
+      'La alineación del objetivo comprueba si el objetivo declarado encaja con lo que el programa suele financiar.',
+    ruralFit: 'Encaje rural / territorial',
+    ruralFitDescription:
+      'El encaje rural / territorial comprueba si la ruta exige actividad rural o una justificación territorial sólida.',
+    sizeFit: 'Encaje del tamaño empresarial',
+    sizeFitDescription:
+      'El encaje del tamaño empresarial comprueba si el tamaño de la empresa entra dentro del rango probable de beneficiarios.',
+    contextFit: 'Encaje del contexto y señales',
+    contextFitDescription:
+      'El encaje del contexto y de las señales usa el texto libre para detectar señales agrarias, digitales, de servicios o mixtas.',
+    routeFit: 'Encaje con la ruta del programa',
+    routeFitDescription:
+      'El encaje con la ruta del programa añade peso cuando la recomendación coincide con una ruta específica de país y región.',
+    routeDetails: 'Detalles de la ruta',
+    estimatedTimeline: 'Calendario estimado',
+    timelineOverview: 'Resumen de tiempos',
+    programmeSummary: 'Qué es este programa',
+    programme: 'Programa',
+    country: 'País',
+    region: 'Región',
+    authority: 'Autoridad',
+    projectSummary: 'Resumen del proyecto',
+    fitReason: 'Por qué puede encajar',
+    applicationAngle: 'Enfoque sugerido para la solicitud',
+    evidenceToPrepare: 'Evidencia a preparar',
+    preSubmissionChecklist: 'Lista previa al envío',
+    firstAuthorityQuestion: 'Pregunta para la autoridad',
+    clarificationPoint: 'Punto a aclarar',
+    verifyBeforeSubmit: 'Verifique antes de enviar',
+    downloadResults: 'Descargar resultados',
+    reviewLabels: {
+      high: 'Alta',
+      medium: 'Media',
+      low: 'Baja',
+      consistent: 'Consistente',
+      mixed: 'Mixto',
+      conflicting: 'En conflicto',
+      cap: 'Orientado a CAP',
+      erdf: 'Orientado a ERDF',
+    },
+    labels: {
+      preferredLanguage: 'Idioma preferido',
+      businessName: 'Nombre de la empresa',
+      country: 'País',
+      region: 'Región',
+      businessType: 'Tipo de empresa',
+      agricultureSubType: 'Subtipo agrícola',
+      businessSize: 'Tamaño de la empresa (definición pyme UE)',
+      yearsInOperation: 'Años en funcionamiento',
+      mainGoal: 'Objetivo principal',
+      ruralArea: 'Zona rural',
+      specialTags: 'Etiquetas especiales',
+      additionalContext: 'Contexto adicional de la empresa (opcional)',
+    },
+    countries: {
+      spain: 'España',
+      italy: 'Italia',
+      poland: 'Polonia',
+      france: 'Francia',
+    },
+    businessTypes: {
+      farm: 'Granja',
+      agriTourism: 'Agroturismo',
+      foodProducer: 'Productor alimentario',
+      manufacturer: 'Fabricante',
+      retail: 'Comercio minorista',
+      service: 'Servicios',
+    },
+    businessSizes: {
+      micro: 'Micro: menos de 10 empleados y hasta 2 millones EUR de facturación o balance',
+      small: 'Pequeña: menos de 50 empleados y hasta 10 millones EUR de facturación o balance',
+      medium: 'Mediana: menos de 250 empleados y hasta 50 millones EUR de facturación o 43 millones EUR de balance',
+    },
+    agricultureSubTypes: {
+      flowersHorticulture: 'Flores / horticultura',
+      fieldCrops: 'Cultivos de campo',
+      livestock: 'Ganadería',
+      greenhouse: 'Invernadero / cultivo controlado',
+      irrigationWater: 'Riego / sistemas de agua',
+      mixedAgriculture: 'Agricultura mixta',
+    },
+    years: {
+      '0-1': '0-1',
+      '2-5': '2-5',
+      '6+': '6+',
+    },
+    goals: {
+      expandOperations: 'Ampliar operaciones',
+      buyEquipment: 'Comprar equipamiento',
+      digitize: 'Digitalizar',
+      sustainabilityUpgrade: 'Mejora de sostenibilidad',
+      hireStaff: 'Contratar personal',
+    },
+    ruralAreaOptions: {
+      yes: 'Sí',
+      no: 'No',
+    },
+    tags: {
+      womenOwned: 'Propiedad de mujeres',
+      youthOwned: 'Propiedad de jóvenes',
+      cooperative: 'Cooperativa',
+      sustainable: 'Sostenible',
+      innovative: 'Innovadora',
+    },
+    eligibility: {
+      likely: 'Probable',
+      possible: 'Posible',
+      unlikely: 'Poco probable',
+    },
+  },
+  it: {
+    badge: 'Prototipo pilota',
+    subtitle:
+      'Un prototipo della Commissione europea che aiuta le imprese rurali a trovare opportunità di finanziamento UE pertinenti',
+    publicDescriptionTitle: 'Cosa fa questo strumento',
+    publicDescription:
+      'FundWise Rural aiuta le imprese rurali a capire quale percorso di finanziamento UE può adattarsi meglio al loro progetto prima di consultare i siti ufficiali. Lo strumento combina il profilo aziendale, la logica regionale dei programmi e un’interpretazione assistita dall’IA per evidenziare le vie CAP ed ERDF più probabili. È pensato per far risparmiare tempo, ridurre la confusione e aiutare a preparare materiali iniziali più forti prima di passare alla candidatura ufficiale.',
+    footerNote:
+      'Prototipo solo a scopo dimostrativo accademico. L’ammissibilità finale è determinata dalle regole ufficiali del programma.',
+    intakeEyebrow: 'Profilo aziendale',
+    intakeTitle: 'Ci parli dell’impresa e del progetto.',
+    intakeDescription:
+      'Compili il profilo qui sotto per generare raccomandazioni prototipo su misura per le opportunità di finanziamento rurale dell’UE.',
+    resultsEyebrow: 'Risultati di finanziamento',
+    resultsTitle: 'Le sue raccomandazioni di finanziamento',
+    resultsDescription:
+      'Esamini qui sotto le corrispondenze prototipo più forti e le usi come punto di partenza per approfondire i programmi.',
+    resultsPlaceholder: 'Le opportunità di finanziamento consigliate appariranno qui.',
+    generating: 'Generazione delle raccomandazioni...',
+    noMatches: 'Nessuna corrispondenza forte trovata. Provi a modificare il profilo aziendale.',
+    aiDisclaimer:
+      'Questa raccomandazione è assistita dall’IA e può precompilare testo guida, ma i candidati devono verificare tutti i dettagli rispetto ai criteri ufficiali del programma prima della candidatura.',
+    aiProfileReview: 'Revisione del profilo da parte dell’IA',
+    aiReasoningTrace: 'Traccia di ragionamento IA',
+    confidenceLevel: 'Livello di fiducia',
+    consistencyStatus: 'Stato di coerenza',
+    primaryRoute: 'Percorso principale',
+    rankingRationale: 'Logica dell’ordine',
+    detectedSignals: 'Segnali rilevati',
+    metricsButton: 'Vedi metriche',
+    metricsTitle: 'Metriche demo',
+    metricsDisclaimer:
+      'Questi conteggi sono salvati localmente in questo browser solo per il test del prototipo.',
+    metricsUsers: 'Numero di utenti',
+    metricsCompletedSearches: 'Ricerche Find Funding completate',
+    metricsCompletionRate: 'Tasso di completamento',
+    metricsApplicationClicks: 'Clic verso la candidatura esterna',
+    metricsClickThroughRate: 'Tasso di clic verso la candidatura',
+    metricsSatisfactionResponses: 'Risposte di soddisfazione',
+    metricsSatisfactionScore: 'Punteggio di soddisfazione utente',
+    metricsClickThroughNote:
+      'Per questo prototipo, il tasso di clic è calcolato localmente come clic verso la candidatura esterna divisi per le ricerche Find Funding completate.',
+    metricsReset: 'Reimposta metriche',
+    helpfulQuestion: 'Questo risultato è stato utile?',
+    helpfulYes: 'Sì',
+    helpfulNo: 'No',
+    startOver: 'Ricomincia',
+    findFunding: 'Trova finanziamenti',
+    useDemoProfile: 'Usa profilo demo',
+    demoCapProfile: 'Demo CAP',
+    demoErdfProfile: 'Demo ERDF',
+    demoMixedProfile: 'Demo mista',
+    selectPlaceholder: 'Selezioni un’opzione',
+    regionPlaceholder: 'Selezioni una regione',
+    businessNamePlaceholder: 'Inserisca il nome della sua impresa',
+    additionalContextPlaceholder:
+      'Descriva la sua impresa, il suo progetto o qualsiasi altra informazione che desidera far considerare al sistema. Per esempio: gestiamo un’attività familiare di turismo rurale e vorremmo un finanziamento per migliorare il sito web e le pratiche di sostenibilità.',
+    additionalContextHelp:
+      'Usi questo campo per descrivere il progetto in modo semplice. Citi elementi come attrezzature, sostenibilità, sito web, prenotazioni, colture o bisogni dei clienti.',
+    summary: (fundType, businessName) =>
+      businessName
+        ? `In base al profilo di ${businessName}, il finanziamento ${fundType} sembra il più pertinente.`
+        : `In base al suo profilo, il finanziamento ${fundType} sembra il più pertinente.`,
+    viewProgramme: (fundType) => `Visualizza programma ${fundType}`,
+    openProgrammePage: (fundType) =>
+      fundType === 'CAP'
+        ? 'Apri la pagina di candidatura CAP'
+        : 'Apri la pagina del programma ERDF',
+    openOfficialInfo: 'Apri le informazioni ufficiali del programma',
+    whatToPrepare: 'Cosa preparare',
+    nextStep: 'Passo successivo:',
+    draftSupport: 'Supporto alla bozza di candidatura',
+    topMatch: 'Migliore corrispondenza',
+    reviewedLinkLabel: 'Percorso ufficiale verificato',
+    scoringInfoTitle: 'Come funziona il punteggio',
+    scoringInfoIntro:
+      'Il punteggio di coerenza è un punteggio orientativo del prototipo. Combina il matching strutturato del programma con l’interpretazione del contesto per mostrare quanto l’impresa si avvicini al percorso.',
+    scoringInfoOutro:
+      'Non si tratta di una decisione legale di ammissibilità. L’ammissibilità finale dipende comunque dal bando attivo, dai documenti ufficiali e dalla verifica dell’autorità.',
+    fitScore: 'Punteggio di coerenza',
+    pointBreakdown: 'Dettaglio dei punti',
+    businessTypeFit: 'Coerenza del tipo di impresa',
+    businessTypeFitDescription:
+      'La coerenza del tipo di impresa verifica se la categoria dell’attività corrisponde ai beneficiari previsti dal programma.',
+    projectGoalFit: 'Coerenza dell’obiettivo',
+    projectGoalFitDescription:
+      'La coerenza dell’obiettivo verifica se l’obiettivo dichiarato rientra in ciò che il programma finanzia di solito.',
+    ruralFit: 'Coerenza rurale / territoriale',
+    ruralFitDescription:
+      'La coerenza rurale / territoriale verifica se il percorso richiede attività rurale o una forte giustificazione territoriale.',
+    sizeFit: 'Coerenza della dimensione aziendale',
+    sizeFitDescription:
+      'La coerenza della dimensione aziendale verifica se la dimensione dell’impresa rientra nel possibile perimetro dei beneficiari.',
+    contextFit: 'Coerenza di contesto e segnali',
+    contextFitDescription:
+      'La coerenza di contesto e segnali usa il testo libero per rilevare segnali agricoli, digitali, di servizi o misti.',
+    routeFit: 'Coerenza con il percorso del programma',
+    routeFitDescription:
+      'La coerenza con il percorso del programma attribuisce più peso quando la raccomandazione corrisponde a un percorso specifico per paese e regione.',
+    routeDetails: 'Dettagli del percorso',
+    estimatedTimeline: 'Tempistica stimata',
+    timelineOverview: 'Panoramica dei tempi',
+    programmeSummary: 'Che cos’è questo programma',
+    programme: 'Programma',
+    country: 'Paese',
+    region: 'Regione',
+    authority: 'Autorità',
+    projectSummary: 'Sintesi del progetto',
+    fitReason: 'Perché potrebbe essere adatto',
+    applicationAngle: 'Impostazione consigliata della candidatura',
+    evidenceToPrepare: 'Documentazione da preparare',
+    preSubmissionChecklist: 'Checklist pre-invio',
+    firstAuthorityQuestion: 'Domanda da porre all’autorità',
+    clarificationPoint: 'Punto da chiarire',
+    verifyBeforeSubmit: 'Verifiche prima dell’invio',
+    downloadResults: 'Scarica risultati',
+    reviewLabels: {
+      high: 'Alta',
+      medium: 'Media',
+      low: 'Bassa',
+      consistent: 'Coerente',
+      mixed: 'Misto',
+      conflicting: 'In conflitto',
+      cap: 'Orientato CAP',
+      erdf: 'Orientato ERDF',
+    },
+    labels: {
+      preferredLanguage: 'Lingua preferita',
+      businessName: 'Nome dell’impresa',
+      country: 'Paese',
+      region: 'Regione',
+      businessType: 'Tipo di impresa',
+      agricultureSubType: 'Sottotipo agricolo',
+      businessSize: 'Dimensione dell’impresa (definizione PMI UE)',
+      yearsInOperation: 'Anni di attività',
+      mainGoal: 'Obiettivo principale',
+      ruralArea: 'Area rurale',
+      specialTags: 'Tag speciali',
+      additionalContext: 'Contesto aziendale aggiuntivo (opzionale)',
+    },
+    countries: {
+      spain: 'Spagna',
+      italy: 'Italia',
+      poland: 'Polonia',
+      france: 'Francia',
+    },
+    businessTypes: {
+      farm: 'Azienda agricola',
+      agriTourism: 'Agriturismo',
+      foodProducer: 'Produttore alimentare',
+      manufacturer: 'Produttore manifatturiero',
+      retail: 'Commercio',
+      service: 'Servizi',
+    },
+    businessSizes: {
+      micro: 'Micro: meno di 10 dipendenti e fino a 2 milioni di EUR di fatturato o bilancio',
+      small: 'Piccola: meno di 50 dipendenti e fino a 10 milioni di EUR di fatturato o bilancio',
+      medium: 'Media: meno di 250 dipendenti e fino a 50 milioni di EUR di fatturato o 43 milioni di EUR di bilancio',
+    },
+    agricultureSubTypes: {
+      flowersHorticulture: 'Fiori / orticoltura',
+      fieldCrops: 'Colture in campo',
+      livestock: 'Allevamento',
+      greenhouse: 'Serra / coltivazione controllata',
+      irrigationWater: 'Irrigazione / sistemi idrici',
+      mixedAgriculture: 'Agricoltura mista',
+    },
+    years: {
+      '0-1': '0-1',
+      '2-5': '2-5',
+      '6+': '6+',
+    },
+    goals: {
+      expandOperations: 'Espandere le attività',
+      buyEquipment: 'Acquistare attrezzature',
+      digitize: 'Digitalizzare',
+      sustainabilityUpgrade: 'Miglioramento della sostenibilità',
+      hireStaff: 'Assumere personale',
+    },
+    ruralAreaOptions: {
+      yes: 'Sì',
+      no: 'No',
+    },
+    tags: {
+      womenOwned: 'A conduzione femminile',
+      youthOwned: 'A conduzione giovanile',
+      cooperative: 'Cooperativa',
+      sustainable: 'Sostenibile',
+      innovative: 'Innovativa',
+    },
+    eligibility: {
+      likely: 'Probabile',
+      possible: 'Possibile',
+      unlikely: 'Improbabile',
+    },
+  },
+  pl: {
+    badge: 'Prototyp pilotażowy',
+    subtitle:
+      'Prototyp dla Komisji Europejskiej pomagający firmom wiejskim znaleźć odpowiednie możliwości finansowania UE',
+    publicDescriptionTitle: 'Do czego służy to narzędzie',
+    publicDescription:
+      'FundWise Rural pomaga firmom wiejskim zrozumieć, która ścieżka finansowania UE może najlepiej pasować do ich projektu, zanim przejdą na oficjalne strony programów. Narzędzie łączy profil firmy, regionalną logikę programów i interpretację wspieraną przez AI, aby wskazać najbardziej prawdopodobne ścieżki CAP i ERDF. Ma oszczędzać czas, zmniejszać chaos informacyjny i pomagać przygotować lepsze materiały na pierwszy etap przed przejściem do oficjalnej ścieżki aplikacyjnej.',
+    footerNote:
+      'Prototyp wyłącznie do demonstracji akademickiej. Ostateczną kwalifikowalność określają oficjalne zasady programu.',
+    intakeEyebrow: 'Profil firmy',
+    intakeTitle: 'Opowiedz nam o firmie i projekcie.',
+    intakeDescription:
+      'Wypełnij poniższy profil, aby uzyskać dopasowane prototypowe rekomendacje dotyczące unijnych możliwości finansowania obszarów wiejskich.',
+    resultsEyebrow: 'Wyniki finansowania',
+    resultsTitle: 'Twoje rekomendacje finansowania',
+    resultsDescription:
+      'Przejrzyj poniżej najmocniejsze prototypowe dopasowania i potraktuj je jako punkt wyjścia do dalszego badania programów.',
+    resultsPlaceholder: 'Tutaj pojawią się rekomendowane możliwości finansowania.',
+    generating: 'Generowanie rekomendacji...',
+    noMatches: 'Nie znaleziono silnych dopasowań. Spróbuj zmienić profil firmy.',
+    aiDisclaimer:
+      'Ta rekomendacja jest wspierana przez AI i może wstępnie uzupełniać tekst pomocniczy, ale przed złożeniem wniosku należy zweryfikować wszystkie informacje względem oficjalnych kryteriów programu.',
+    aiProfileReview: 'Przegląd profilu przez AI',
+    aiReasoningTrace: 'Ślad rozumowania AI',
+    confidenceLevel: 'Poziom pewności',
+    consistencyStatus: 'Status spójności',
+    primaryRoute: 'Główna ścieżka',
+    rankingRationale: 'Powód rankingu',
+    detectedSignals: 'Wykryte sygnały',
+    metricsButton: 'Zobacz metryki',
+    metricsTitle: 'Metryki demo',
+    metricsDisclaimer:
+      'Te dane są zapisywane lokalnie w tej przeglądarce wyłącznie do testów prototypu.',
+    metricsUsers: 'Liczba użytkowników',
+    metricsCompletedSearches: 'Ukończone wyszukiwania Find Funding',
+    metricsCompletionRate: 'Wskaźnik ukończenia',
+    metricsApplicationClicks: 'Kliknięcia w zewnętrzny formularz',
+    metricsClickThroughRate: 'Współczynnik kliknięć do wniosku',
+    metricsSatisfactionResponses: 'Odpowiedzi satysfakcji',
+    metricsSatisfactionScore: 'Wynik satysfakcji użytkownika',
+    metricsClickThroughNote:
+      'W tym prototypie współczynnik kliknięć jest liczony lokalnie jako kliknięcia w zewnętrzny formularz podzielone przez ukończone wyszukiwania Find Funding.',
+    metricsReset: 'Resetuj metryki',
+    helpfulQuestion: 'Czy ten wynik był pomocny?',
+    helpfulYes: 'Tak',
+    helpfulNo: 'Nie',
+    startOver: 'Zacznij od nowa',
+    findFunding: 'Znajdź finansowanie',
+    useDemoProfile: 'Użyj profilu demo',
+    demoCapProfile: 'Demo CAP',
+    demoErdfProfile: 'Demo ERDF',
+    demoMixedProfile: 'Demo mieszane',
+    selectPlaceholder: 'Wybierz opcję',
+    regionPlaceholder: 'Wybierz region',
+    businessNamePlaceholder: 'Wpisz nazwę firmy',
+    additionalContextPlaceholder:
+      'Opisz swoją firmę, projekt lub wszystko inne, co system powinien wziąć pod uwagę. Na przykład: prowadzimy rodzinny biznes turystyki wiejskiej i chcemy finansowania na poprawę strony internetowej oraz działań zrównoważonych.',
+    additionalContextHelp:
+      'Użyj tego pola, aby prostym językiem opisać projekt. Wspomnij o sprzęcie, zrównoważeniu, stronie internetowej, rezerwacjach, uprawach lub potrzebach klientów.',
+    summary: (fundType, businessName) =>
+      businessName
+        ? `Na podstawie profilu firmy ${businessName} finansowanie ${fundType} wydaje się najbardziej odpowiednie.`
+        : `Na podstawie Twojego profilu finansowanie ${fundType} wydaje się najbardziej odpowiednie.`,
+    viewProgramme: (fundType) => `Zobacz program ${fundType}`,
+    openProgrammePage: (fundType) =>
+      fundType === 'CAP' ? 'Otwórz stronę wniosku CAP' : 'Otwórz stronę programu ERDF',
+    openOfficialInfo: 'Otwórz oficjalne informacje o programie',
+    whatToPrepare: 'Co przygotować',
+    nextStep: 'Następny krok:',
+    draftSupport: 'Wsparcie szkicu wniosku',
+    topMatch: 'Najlepsze dopasowanie',
+    reviewedLinkLabel: 'Sprawdzona ścieżka oficjalna',
+    scoringInfoTitle: 'Jak działa punktacja',
+    scoringInfoIntro:
+      'Wynik dopasowania jest orientacyjnym wynikiem prototypu. Łączy strukturalne dopasowanie programu z interpretacją kontekstu, aby pokazać, jak blisko firma znajduje się względem danej ścieżki.',
+    scoringInfoOutro:
+      'To nie jest prawna decyzja o kwalifikowalności. Ostateczna kwalifikowalność nadal zależy od aktualnego naboru, oficjalnych dokumentów i oceny instytucji.',
+    fitScore: 'Wynik dopasowania',
+    pointBreakdown: 'Podział punktów',
+    businessTypeFit: 'Dopasowanie typu działalności',
+    businessTypeFitDescription:
+      'Dopasowanie typu działalności sprawdza, czy kategoria firmy odpowiada grupie docelowych beneficjentów programu.',
+    projectGoalFit: 'Dopasowanie celu projektu',
+    projectGoalFitDescription:
+      'Dopasowanie celu projektu sprawdza, czy zadeklarowany cel odpowiada temu, co program zwykle finansuje.',
+    ruralFit: 'Dopasowanie wiejskie / terytorialne',
+    ruralFitDescription:
+      'Dopasowanie wiejskie / terytorialne sprawdza, czy ścieżka wymaga działalności wiejskiej lub mocnego uzasadnienia terytorialnego.',
+    sizeFit: 'Dopasowanie wielkości firmy',
+    sizeFitDescription:
+      'Dopasowanie wielkości firmy sprawdza, czy rozmiar przedsiębiorstwa mieści się w prawdopodobnym zakresie beneficjentów programu.',
+    contextFit: 'Dopasowanie kontekstu i sygnałów',
+    contextFitDescription:
+      'Dopasowanie kontekstu i sygnałów wykorzystuje opis firmy do wykrywania sygnałów rolniczych, cyfrowych, usługowych lub mieszanych.',
+    routeFit: 'Dopasowanie do ścieżki programu',
+    routeFitDescription:
+      'Dopasowanie do ścieżki programu zwiększa wagę, gdy rekomendacja odpowiada konkretnej ścieżce krajowej i regionalnej.',
+    routeDetails: 'Szczegóły ścieżki',
+    estimatedTimeline: 'Szacowany harmonogram',
+    timelineOverview: 'Przegląd czasu',
+    programmeSummary: 'Czym jest ten program',
+    programme: 'Program',
+    country: 'Kraj',
+    region: 'Region',
+    authority: 'Instytucja',
+    projectSummary: 'Podsumowanie projektu',
+    fitReason: 'Dlaczego może pasować',
+    applicationAngle: 'Sugerowany kierunek wniosku',
+    evidenceToPrepare: 'Materiały do przygotowania',
+    preSubmissionChecklist: 'Lista przed złożeniem',
+    firstAuthorityQuestion: 'Pytanie do instytucji',
+    clarificationPoint: 'Punkt do doprecyzowania',
+    verifyBeforeSubmit: 'Sprawdź przed złożeniem',
+    downloadResults: 'Pobierz wyniki',
+    reviewLabels: {
+      high: 'Wysoki',
+      medium: 'Średni',
+      low: 'Niski',
+      consistent: 'Spójny',
+      mixed: 'Mieszany',
+      conflicting: 'Sprzeczny',
+      cap: 'Z przewagą CAP',
+      erdf: 'Z przewagą ERDF',
+    },
+    labels: {
+      preferredLanguage: 'Preferowany język',
+      businessName: 'Nazwa firmy',
+      country: 'Kraj',
+      region: 'Region',
+      businessType: 'Typ działalności',
+      agricultureSubType: 'Podtyp rolniczy',
+      businessSize: 'Wielkość firmy (definicja MŚP UE)',
+      yearsInOperation: 'Lata działalności',
+      mainGoal: 'Główny cel',
+      ruralArea: 'Obszar wiejski',
+      specialTags: 'Specjalne oznaczenia',
+      additionalContext: 'Dodatkowy kontekst biznesowy (opcjonalnie)',
+    },
+    countries: {
+      spain: 'Hiszpania',
+      italy: 'Włochy',
+      poland: 'Polska',
+      france: 'Francja',
+    },
+    businessTypes: {
+      farm: 'Gospodarstwo rolne',
+      agriTourism: 'Agroturystyka',
+      foodProducer: 'Producent żywności',
+      manufacturer: 'Producent',
+      retail: 'Handel detaliczny',
+      service: 'Usługi',
+    },
+    businessSizes: {
+      micro: 'Mikro: mniej niż 10 pracowników i do 2 mln EUR obrotu lub sumy bilansowej',
+      small: 'Mała: mniej niż 50 pracowników i do 10 mln EUR obrotu lub sumy bilansowej',
+      medium: 'Średnia: mniej niż 250 pracowników i do 50 mln EUR obrotu lub 43 mln EUR sumy bilansowej',
+    },
+    agricultureSubTypes: {
+      flowersHorticulture: 'Kwiaty / ogrodnictwo',
+      fieldCrops: 'Uprawy polowe',
+      livestock: 'Hodowla zwierząt',
+      greenhouse: 'Szklarnia / uprawa kontrolowana',
+      irrigationWater: 'Nawadnianie / systemy wodne',
+      mixedAgriculture: 'Rolnictwo mieszane',
+    },
+    years: {
+      '0-1': '0-1',
+      '2-5': '2-5',
+      '6+': '6+',
+    },
+    goals: {
+      expandOperations: 'Rozszerzyć działalność',
+      buyEquipment: 'Kupić sprzęt',
+      digitize: 'Cyfryzacja',
+      sustainabilityUpgrade: 'Ulepszenie zrównoważonego rozwoju',
+      hireStaff: 'Zatrudnić pracowników',
+    },
+    ruralAreaOptions: {
+      yes: 'Tak',
+      no: 'Nie',
+    },
+    tags: {
+      womenOwned: 'Prowadzona przez kobiety',
+      youthOwned: 'Prowadzona przez młodzież',
+      cooperative: 'Spółdzielnia',
+      sustainable: 'Zrównoważona',
+      innovative: 'Innowacyjna',
+    },
+    eligibility: {
+      likely: 'Prawdopodobne',
+      possible: 'Możliwe',
+      unlikely: 'Mało prawdopodobne',
+    },
+  },
+  fr: {
+    badge: 'Prototype pilote',
+    subtitle:
+      'Un prototype destiné à la Commission européenne pour aider les entreprises rurales à trouver des opportunités de financement de l’UE pertinentes',
+    publicDescriptionTitle: 'À quoi sert cet outil',
+    publicDescription:
+      'FundWise Rural aide les entreprises rurales à comprendre quelle voie de financement européen peut correspondre à leur projet avant de naviguer sur les sites officiels. L’outil combine le profil de l’entreprise, la logique régionale des programmes et une interprétation assistée par l’IA pour faire ressortir les pistes CAP et ERDF les plus probables. Il vise à faire gagner du temps, réduire la confusion et aider à préparer de meilleurs premiers éléments avant de passer vers la voie officielle de candidature.',
+    footerNote:
+      'Prototype uniquement à des fins de démonstration académique. L’éligibilité finale est déterminée par les règles officielles du programme.',
+    intakeEyebrow: 'Profil de l’entreprise',
+    intakeTitle: 'Parlez-nous de l’entreprise et du projet.',
+    intakeDescription:
+      'Complétez le profil ci-dessous pour générer des recommandations prototypes adaptées sur les opportunités de financement rural de l’UE.',
+    resultsEyebrow: 'Résultats de financement',
+    resultsTitle: 'Vos recommandations de financement',
+    resultsDescription:
+      'Consultez ci-dessous les correspondances prototypes les plus fortes et utilisez-les comme point de départ pour approfondir les programmes.',
+    resultsPlaceholder: 'Vos opportunités de financement recommandées apparaîtront ici.',
+    generating: 'Génération des recommandations...',
+    noMatches: 'Aucune correspondance forte trouvée. Essayez d’ajuster le profil de votre entreprise.',
+    aiDisclaimer:
+      'Cette recommandation est assistée par l’IA et peut préremplir un texte d’orientation, mais les candidats doivent vérifier tous les détails au regard des critères officiels du programme avant de soumettre leur dossier.',
+    aiProfileReview: 'Revue du profil par l’IA',
+    aiReasoningTrace: 'Trace de raisonnement IA',
+    confidenceLevel: 'Niveau de confiance',
+    consistencyStatus: 'Statut de cohérence',
+    primaryRoute: 'Voie principale',
+    rankingRationale: 'Logique de classement',
+    detectedSignals: 'Signaux détectés',
+    metricsButton: 'Voir les métriques',
+    metricsTitle: 'Métriques démo',
+    metricsDisclaimer:
+      'Ces chiffres sont stockés localement dans ce navigateur uniquement pour les tests du prototype.',
+    metricsUsers: 'Nombre d’utilisateurs',
+    metricsCompletedSearches: 'Recherches Find Funding terminées',
+    metricsCompletionRate: 'Taux de complétion',
+    metricsApplicationClicks: 'Clics vers la candidature externe',
+    metricsClickThroughRate: 'Taux de clic vers la candidature',
+    metricsSatisfactionResponses: 'Réponses de satisfaction',
+    metricsSatisfactionScore: 'Score de satisfaction utilisateur',
+    metricsClickThroughNote:
+      'Pour ce prototype, le taux de clic est calculé localement comme les clics vers la candidature externe divisés par les recherches Find Funding terminées.',
+    metricsReset: 'Réinitialiser les métriques',
+    helpfulQuestion: 'Ce résultat vous a-t-il été utile ?',
+    helpfulYes: 'Oui',
+    helpfulNo: 'Non',
+    startOver: 'Recommencer',
+    findFunding: 'Trouver un financement',
+    useDemoProfile: 'Utiliser le profil démo',
+    demoCapProfile: 'Démo CAP',
+    demoErdfProfile: 'Démo ERDF',
+    demoMixedProfile: 'Démo mixte',
+    selectPlaceholder: 'Veuillez sélectionner',
+    regionPlaceholder: 'Sélectionnez une région',
+    businessNamePlaceholder: 'Saisissez le nom de votre entreprise',
+    additionalContextPlaceholder:
+      'Décrivez votre entreprise, votre projet ou tout autre élément que le système doit prendre en compte. Par exemple : nous gérons une entreprise familiale de tourisme rural et souhaitons un financement pour améliorer notre site web et nos pratiques de durabilité.',
+    additionalContextHelp:
+      'Utilisez ce champ pour décrire le projet simplement. Mentionnez par exemple les équipements, la durabilité, le site web, la réservation, les cultures ou les besoins clients.',
+    summary: (fundType, businessName) =>
+      businessName
+        ? `D’après le profil de ${businessName}, le financement ${fundType} semble le plus pertinent.`
+        : `D’après votre profil, le financement ${fundType} semble le plus pertinent.`,
+    viewProgramme: (fundType) => `Voir le programme ${fundType}`,
+    openProgrammePage: (fundType) =>
+      fundType === 'CAP'
+        ? 'Ouvrir la page de candidature CAP'
+        : 'Ouvrir la page du programme ERDF',
+    openOfficialInfo: 'Ouvrir les informations officielles du programme',
+    whatToPrepare: 'Ce qu’il faut préparer',
+    nextStep: 'Prochaine étape :',
+    draftSupport: 'Aide au brouillon de candidature',
+    topMatch: 'Meilleure correspondance',
+    reviewedLinkLabel: 'Parcours officiel vérifié',
+    scoringInfoTitle: 'Comment fonctionne le score',
+    scoringInfoIntro:
+      'Le score d’adéquation est un score d’orientation du prototype. Il combine l’appariement structuré du programme avec l’interprétation du contexte pour montrer à quel point l’entreprise correspond à la voie proposée.',
+    scoringInfoOutro:
+      'Il ne s’agit pas d’une décision juridique d’éligibilité. L’éligibilité finale dépend toujours de l’appel en cours, des documents officiels et de l’examen par l’autorité.',
+    fitScore: 'Score d’adéquation',
+    pointBreakdown: 'Détail des points',
+    businessTypeFit: 'Adéquation du type d’activité',
+    businessTypeFitDescription:
+      'L’adéquation du type d’activité vérifie si la catégorie de l’entreprise correspond aux bénéficiaires visés par le programme.',
+    projectGoalFit: 'Adéquation de l’objectif du projet',
+    projectGoalFitDescription:
+      'L’adéquation de l’objectif vérifie si l’objectif déclaré correspond à ce que le programme finance habituellement.',
+    ruralFit: 'Adéquation rurale / territoriale',
+    ruralFitDescription:
+      'L’adéquation rurale / territoriale vérifie si la voie attend une activité rurale ou une justification territoriale forte.',
+    sizeFit: 'Adéquation de la taille d’entreprise',
+    sizeFitDescription:
+      'L’adéquation de la taille d’entreprise vérifie si la taille de l’entreprise se situe dans la plage probable des bénéficiaires.',
+    contextFit: 'Adéquation du contexte et des signaux',
+    contextFitDescription:
+      'L’adéquation du contexte et des signaux utilise le texte libre pour détecter des signaux agricoles, numériques, de services ou mixtes.',
+    routeFit: 'Adéquation avec le parcours du programme',
+    routeFitDescription:
+      'L’adéquation avec le parcours du programme ajoute du poids lorsque la recommandation correspond à un parcours spécifique par pays et par région.',
+    routeDetails: 'Détails du parcours',
+    estimatedTimeline: 'Calendrier estimatif',
+    timelineOverview: 'Vue d’ensemble du calendrier',
+    programmeSummary: 'Ce qu’est ce programme',
+    programme: 'Programme',
+    country: 'Pays',
+    region: 'Région',
+    authority: 'Autorité',
+    projectSummary: 'Résumé du projet',
+    fitReason: 'Pourquoi cela peut convenir',
+    applicationAngle: 'Angle conseillé pour la candidature',
+    evidenceToPrepare: 'Éléments à préparer',
+    preSubmissionChecklist: 'Checklist avant dépôt',
+    firstAuthorityQuestion: 'Question à poser à l’autorité',
+    clarificationPoint: 'Point à clarifier',
+    verifyBeforeSubmit: 'À vérifier avant le dépôt',
+    downloadResults: 'Télécharger les résultats',
+    reviewLabels: {
+      high: 'Élevé',
+      medium: 'Moyen',
+      low: 'Faible',
+      consistent: 'Cohérent',
+      mixed: 'Mixte',
+      conflicting: 'Contradictoire',
+      cap: 'Orientation CAP',
+      erdf: 'Orientation ERDF',
+    },
+    labels: {
+      preferredLanguage: 'Langue préférée',
+      businessName: 'Nom de l’entreprise',
+      country: 'Pays',
+      region: 'Région',
+      businessType: 'Type d’entreprise',
+      agricultureSubType: 'Sous-type agricole',
+      businessSize: 'Taille de l’entreprise (définition PME UE)',
+      yearsInOperation: 'Années d’activité',
+      mainGoal: 'Objectif principal',
+      ruralArea: 'Zone rurale',
+      specialTags: 'Étiquettes spéciales',
+      additionalContext: 'Contexte supplémentaire de l’entreprise (optionnel)',
+    },
+    countries: {
+      spain: 'Espagne',
+      italy: 'Italie',
+      poland: 'Pologne',
+      france: 'France',
+    },
+    businessTypes: {
+      farm: 'Exploitation agricole',
+      agriTourism: 'Agri-tourisme',
+      foodProducer: 'Producteur alimentaire',
+      manufacturer: 'Fabricant',
+      retail: 'Commerce',
+      service: 'Services',
+    },
+    businessSizes: {
+      micro: 'Micro: moins de 10 salariés et jusqu’à 2 millions EUR de chiffre d’affaires ou de bilan',
+      small: 'Petite: moins de 50 salariés et jusqu’à 10 millions EUR de chiffre d’affaires ou de bilan',
+      medium: 'Moyenne: moins de 250 salariés et jusqu’à 50 millions EUR de chiffre d’affaires ou 43 millions EUR de bilan',
+    },
+    agricultureSubTypes: {
+      flowersHorticulture: 'Fleurs / horticulture',
+      fieldCrops: 'Cultures de plein champ',
+      livestock: 'Élevage',
+      greenhouse: 'Serre / culture contrôlée',
+      irrigationWater: 'Irrigation / systèmes hydriques',
+      mixedAgriculture: 'Agriculture mixte',
+    },
+    years: {
+      '0-1': '0-1',
+      '2-5': '2-5',
+      '6+': '6+',
+    },
+    goals: {
+      expandOperations: 'Développer les activités',
+      buyEquipment: 'Acheter des équipements',
+      digitize: 'Numériser',
+      sustainabilityUpgrade: 'Amélioration de la durabilité',
+      hireStaff: 'Recruter du personnel',
+    },
+    ruralAreaOptions: {
+      yes: 'Oui',
+      no: 'Non',
+    },
+    tags: {
+      womenOwned: 'Dirigée par des femmes',
+      youthOwned: 'Dirigée par des jeunes',
+      cooperative: 'Coopérative',
+      sustainable: 'Durable',
+      innovative: 'Innovante',
+    },
+    eligibility: {
+      likely: 'Probable',
+      possible: 'Possible',
+      unlikely: 'Peu probable',
+    },
+  },
+};
+
+export function getTranslation(language) {
+  return translations[language] ?? translations[defaultLanguage];
+}
