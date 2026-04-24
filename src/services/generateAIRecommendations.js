@@ -1,9 +1,8 @@
 import { programmeData } from '../data/programmeData';
 import { defaultLanguage, getTranslation, regionsByCountry } from '../i18n/translations';
 
-const OLLAMA_ENDPOINT = 'http://127.0.0.1:11434/api/generate';
-const OLLAMA_MODEL = 'llama3.2:3b';
 const HOSTED_AI_ENDPOINT = '/api/recommendations';
+const HOSTED_ASSISTANT_ENDPOINT = '/api/assistant';
 const COUNTRY_ROUTE_NAMES = {
   spain: 'Spain',
   italy: 'Italy',
@@ -50,10 +49,19 @@ const SERVICE_SIGNALS = [
   'urban clients',
 ];
 
+const FIT_WEIGHTS = {
+  businessType: 22,
+  projectGoal: 22,
+  rural: 18,
+  size: 10,
+  context: 13,
+  routeFit: 15,
+};
+
 export function analyzeProfileReview(profile) {
   const language = profile.preferredLanguage || defaultLanguage;
   const copy = getTranslation(language);
-  const context = (profile.additionalContext || '').toLowerCase();
+  const context = `${profile.additionalContext || ''} ${profile.otherMainGoal || ''}`.toLowerCase();
 
   let capHits = countSignals(context, CAP_SIGNALS);
   const erdfHits = countSignals(context, ERDF_SIGNALS);
@@ -155,12 +163,12 @@ export function analyzeProfileReview(profile) {
 
 export async function generateAIRecommendations(profile, matchedPrograms) {
   const localReview = analyzeProfileReview(profile);
-  const localRecommendations = generateMockAIRecommendations(
+  const localRecommendations = harmonizeRecommendationSet(generateMockAIRecommendations(
     profile,
     matchedPrograms,
     localReview,
-  );
-  const finalizedLocalRecommendations = finalizeRecommendations(localRecommendations);
+  ), localReview, profile);
+  const finalizedLocalRecommendations = finalizeRecommendations(localRecommendations, localReview, profile);
   localReview.executiveSummary = buildExecutiveSummary(
     profile,
     finalizedLocalRecommendations,
@@ -168,34 +176,20 @@ export async function generateAIRecommendations(profile, matchedPrograms) {
   );
 
   try {
-    if (shouldTryHostedAi()) {
-      const hostedResult = await generateHostedRecommendations(
-        profile,
-        localRecommendations,
-      );
-      const mergedRecommendations = finalizeRecommendations(
-        mergeRecommendations(localRecommendations, hostedResult.recommendations),
-      );
-      const normalizedReview = normalizeProfileReview(localReview, hostedResult.profileReview);
-      normalizedReview.executiveSummary =
-        normalizedReview.executiveSummary ||
-        buildExecutiveSummary(profile, mergedRecommendations, normalizedReview);
-
-      return {
-        profileReview: normalizedReview,
-        recommendations: mergedRecommendations,
-        source: 'cloudflare-ai',
-      };
-    }
-
-    const ollamaResult = await generateOllamaRecommendations(
+    const hostedResult = await generateHostedRecommendations(
       profile,
       localRecommendations,
     );
     const mergedRecommendations = finalizeRecommendations(
-      mergeRecommendations(localRecommendations, ollamaResult.recommendations),
+      harmonizeRecommendationSet(
+        mergeRecommendations(localRecommendations, hostedResult.recommendations),
+        localReview,
+        profile,
+      ),
+      localReview,
+      profile,
     );
-    const normalizedReview = normalizeProfileReview(localReview, ollamaResult.profileReview);
+    const normalizedReview = normalizeProfileReview(localReview, hostedResult.profileReview);
     normalizedReview.executiveSummary =
       normalizedReview.executiveSummary ||
       buildExecutiveSummary(profile, mergedRecommendations, normalizedReview);
@@ -203,38 +197,56 @@ export async function generateAIRecommendations(profile, matchedPrograms) {
     return {
       profileReview: normalizedReview,
       recommendations: mergedRecommendations,
-      source: 'ollama',
+      source: 'cloudflare-ai',
     };
   } catch (error) {
-    console.warn('Hosted AI unavailable, trying local fallback.', error);
+    console.warn('Hosted AI unavailable, using local recommendation fallback.', error);
 
-    try {
-      const ollamaResult = await generateOllamaRecommendations(
-        profile,
-        localRecommendations,
-      );
-      const mergedRecommendations = finalizeRecommendations(
-        mergeRecommendations(localRecommendations, ollamaResult.recommendations),
-      );
-      const normalizedReview = normalizeProfileReview(localReview, ollamaResult.profileReview);
-      normalizedReview.executiveSummary =
-        normalizedReview.executiveSummary ||
-        buildExecutiveSummary(profile, mergedRecommendations, normalizedReview);
+    return {
+      profileReview: localReview,
+      recommendations: finalizedLocalRecommendations,
+      source: 'local-fallback',
+    };
+  }
+}
 
-      return {
-        profileReview: normalizedReview,
-        recommendations: mergedRecommendations,
-        source: 'ollama',
-      };
-    } catch (ollamaError) {
-      console.warn('Ollama unavailable, using local recommendation fallback.', ollamaError);
+export async function askFundwiseAssistant({
+  question,
+  language = defaultLanguage,
+  submittedProfile = null,
+  profileReview = null,
+  results = [],
+  currentScreen = 'form',
+}) {
+  const localAnswer = buildLocalAssistantResponse({
+    question,
+    language,
+    submittedProfile,
+    profileReview,
+    results,
+    currentScreen,
+  });
 
-      return {
-        profileReview: localReview,
-        recommendations: finalizedLocalRecommendations,
-        source: 'local-fallback',
-      };
-    }
+  try {
+    const hostedResult = await generateHostedAssistantResponse({
+      question,
+      language,
+      submittedProfile,
+      profileReview,
+      results,
+      currentScreen,
+    });
+
+    return {
+      answer: sanitizeAssistantAnswer(hostedResult?.answer, localAnswer),
+      source: 'cloudflare-ai',
+    };
+  } catch (error) {
+    console.warn('Assistant AI unavailable, using local assistant fallback.', error);
+    return {
+      answer: localAnswer,
+      source: 'local-fallback',
+    };
   }
 }
 
@@ -253,8 +265,11 @@ export function generateMockAIRecommendations(profile, matchedPrograms, profileR
   const detailedBusinessTypeLabel = agricultureSubTypeLabel
     ? `${businessTypeLabel} (${agricultureSubTypeLabel})`
     : businessTypeLabel;
-  const businessSizeLabel = copy.businessSizes[profile.businessSize] || '';
-  const goalLabel = copy.goals[profile.mainGoal] || '';
+  const businessSizeLabel = getNarrativeBusinessSize(profile.businessSize, language);
+  const goalLabel =
+    profile.mainGoal === 'other'
+      ? profile.otherMainGoal?.trim() || copy.goals.other || ''
+      : copy.goals[profile.mainGoal] || profile.otherMainGoal?.trim() || '';
   const tagLabels = profile.specialTags.map((tag) => copy.tags[tag]).filter(Boolean);
   const review = profileReview || analyzeProfileReview(profile);
 
@@ -263,11 +278,13 @@ export function generateMockAIRecommendations(profile, matchedPrograms, profileR
       const isCAP = program.fundType === 'CAP';
       const route = selectProgrammeRoute(program.fundType, countryLabel, regionLabel);
       const fitBreakdown = buildFitBreakdown(program, profile, review, route);
-      const aiAdjustedScore = adjustScoreForAmbiguity(program.score || 0, profile, review);
-      const fitScore = normalizeFitScore(fitBreakdown.total);
+      const fitScore = normalizeFitScore(fitBreakdown);
+      const aiAdjustedScore = adjustScoreForAmbiguity(fitScore, profile, review);
+      const displayName = buildRecommendationTitle(program, route, language);
 
       return {
         ...program,
+        name: displayName,
         program_name: program.name,
         explanation: buildExplanation({
           language,
@@ -283,18 +300,7 @@ export function generateMockAIRecommendations(profile, matchedPrograms, profileR
         eligibility: determineEligibility(aiAdjustedScore),
         requirements: buildRequirements(language, isCAP ? 'cap' : 'erdf'),
         nextStep: buildNextStep(language, isCAP, review, route),
-        draftSupport: buildDraftSupport({
-          program,
-          language,
-          businessName,
-          businessTypeLabel: detailedBusinessTypeLabel,
-          businessSizeLabel,
-          goalLabel,
-          tagLabels,
-          review,
-          isCAP,
-          route,
-        }),
+        draftSupport: null,
         routeDetails: {
           programme: route?.programmeTitle || program.name,
           country: route?.country || countryDisplayLabel || 'EU',
@@ -310,6 +316,8 @@ export function generateMockAIRecommendations(profile, matchedPrograms, profileR
         routeSummary: route?.summary || program.summary || program.description || '',
         applicationPage: route?.applicationPage || program.externalLink,
         officialPage: route?.officialPage || program.externalLink,
+        supportsMockApplication: Boolean(route?.supportsMockApplication),
+        applicationRouteType: route?.applicationRouteType || 'official-entry',
         authority: route?.authority || 'Relevant managing authority',
         estimatedTimeline: buildEstimatedTimeline(language, program, route),
         aiAdjustedScore,
@@ -319,48 +327,332 @@ export function generateMockAIRecommendations(profile, matchedPrograms, profileR
         rankingReason: buildProgrammeRankingReason(language, isCAP, review, route),
       };
     })
-    .sort((left, right) => right.rankingScore - left.rankingScore);
+    .sort((left, right) => compareRecommendations(left, right, review, profile));
 }
 
-function finalizeRecommendations(recommendations) {
-  const sorted = [...recommendations].sort((left, right) => right.rankingScore - left.rankingScore);
+export function generateDraftApplicationSupport(profile, recommendation, profileReview) {
+  const language = profile?.preferredLanguage || defaultLanguage;
+  const copy = getTranslation(language);
+  const countryLabel = COUNTRY_ROUTE_NAMES[profile?.country] || '';
+  const regionLabel =
+    regionsByCountry[profile?.country]?.find((region) => region.value === profile?.region)?.label ||
+    '';
+  const route = {
+    programmeTitle: recommendation?.routeDetails?.programme,
+    country: recommendation?.routeDetails?.country || countryLabel,
+    region: recommendation?.routeDetails?.region || regionLabel,
+    authority: recommendation?.routeDetails?.authority,
+    targetApplicants: recommendation?.routeContext?.targetApplicants || '',
+    commonPriorities: recommendation?.routeContext?.commonPriorities || [],
+    commonConstraints: recommendation?.routeContext?.commonConstraints || [],
+    regionNotes: recommendation?.routeContext?.regionNotes || [],
+    applicationPage: recommendation?.applicationPage,
+    officialPage: recommendation?.officialPage,
+  };
+  const businessTypeLabel = copy.businessTypes[profile?.businessType] || '';
+  const agricultureSubTypeLabel = copy.agricultureSubTypes?.[profile?.agricultureSubType] || '';
+  const detailedBusinessTypeLabel = agricultureSubTypeLabel
+    ? `${businessTypeLabel} (${agricultureSubTypeLabel})`
+    : businessTypeLabel;
+  const businessSizeLabel = getNarrativeBusinessSize(profile?.businessSize, language);
+  const goalLabel =
+    profile?.mainGoal === 'other'
+      ? profile?.otherMainGoal?.trim() || copy.goals.other || ''
+      : copy.goals[profile?.mainGoal] || profile?.otherMainGoal?.trim() || '';
+  const tagLabels = (profile?.specialTags || []).map((tag) => copy.tags[tag]).filter(Boolean);
+
+  return buildDraftSupport({
+    program: recommendation,
+    language,
+    businessName: profile?.businessName?.trim(),
+    businessTypeLabel: detailedBusinessTypeLabel,
+    businessSizeLabel,
+    goalLabel,
+    tagLabels,
+    review: profileReview || analyzeProfileReview(profile || {}),
+    isCAP: recommendation?.fundType === 'CAP',
+    route,
+  });
+}
+
+function finalizeRecommendations(recommendations, review = { routeClassification: 'mixed' }, profile = {}) {
+  const sorted = [...recommendations].sort((left, right) =>
+    compareRecommendations(left, right, review, profile),
+  );
   const meaningful = sorted.filter(
-    (item) => item.eligibility !== 'unlikely' || item.rankingScore >= 6 || item.fitScore >= 45,
+    (item) => item.eligibility !== 'unlikely' || item.rankingScore >= 48 || item.fitScore >= 45,
   );
 
   return (meaningful.length > 0 ? meaningful : sorted).slice(0, 3);
 }
 
-function adjustScoreForAmbiguity(baseScore, profile, review) {
-  let score = baseScore;
+function harmonizeRecommendationSet(recommendations, review, profile = {}) {
+  const sorted = [...recommendations].sort((left, right) =>
+    compareRecommendations(left, right, review, profile),
+  );
 
-  if (profile.businessType === 'farm' && review.signals.serviceHits >= 2 && review.signals.capHits === 0) {
-    score -= 2;
-  }
+  return sorted.map((item, index) => {
+    const expectedEligibility = getExpectedEligibility(item, review, index);
+    const normalizedEligibility =
+      item.eligibility === 'unlikely' && expectedEligibility !== 'unlikely'
+        ? expectedEligibility
+        : item.eligibility === 'likely' &&
+            expectedEligibility === 'possible' &&
+            item.fitScore < 55 &&
+            item.rankingScore < 7
+          ? 'possible'
+          : item.eligibility || expectedEligibility;
 
-  if (review.signals.capHits > 0 && review.signals.erdfHits > 0) {
-    score += 1;
-  }
+    const explanation =
+      normalizedEligibility === 'unlikely'
+        ? ensureUnlikelyExplanation(item.explanation, item, review)
+        : item.explanation;
 
-  if (review.consistency === 'consistent') {
-    score += 1;
-  }
-
-  if (review.consistency === 'conflicting') {
-    score -= 1;
-  }
-
-  return score;
+    return {
+      ...item,
+      eligibility: normalizedEligibility,
+      explanation,
+    };
+  });
 }
 
-function determineEligibility(score) {
-  if (score >= 9) return 'likely';
-  if (score >= 5) return 'possible';
+function compareRecommendations(left, right, review, profile) {
+  const scoreDelta = right.rankingScore - left.rankingScore;
+
+  if (left.fundType !== right.fundType) {
+    const capAnchoredProfile =
+      profile.businessType === 'farm' &&
+      profile.ruralArea === 'yes' &&
+      ['buyEquipment', 'sustainabilityUpgrade'].includes(profile.mainGoal);
+
+    const capPreferred =
+      review.routeClassification === 'cap' ||
+      (review.routeClassification === 'mixed' && capAnchoredProfile);
+
+    const erdfPreferred = review.routeClassification === 'erdf';
+
+    if (capPreferred && Math.abs(scoreDelta) < 14) {
+      return left.fundType === 'CAP' ? -1 : 1;
+    }
+
+    if (erdfPreferred && Math.abs(scoreDelta) < 14) {
+      return left.fundType === 'ERDF' ? -1 : 1;
+    }
+
+    if (review.routeClassification === 'mixed' && Math.abs(scoreDelta) < 8) {
+      return left.fundType === 'CAP' ? -1 : 1;
+    }
+  }
+
+  if (scoreDelta !== 0) {
+    return scoreDelta;
+  }
+
+  return right.fitScore - left.fitScore;
+}
+
+function getExpectedEligibility(item, review, index) {
+  const routeAligned =
+    (review.routeClassification === 'cap' && item.fundType === 'CAP') ||
+    (review.routeClassification === 'erdf' && item.fundType === 'ERDF') ||
+    review.routeClassification === 'mixed';
+  const strongFit = item.fitScore >= 72 || item.rankingScore >= 72;
+  const mediumFit = item.fitScore >= 50 || item.rankingScore >= 50;
+
+  if (strongFit && routeAligned) {
+    return 'likely';
+  }
+
+  if (strongFit || (mediumFit && index === 0 && routeAligned)) {
+    return 'possible';
+  }
+
+  if (mediumFit) {
+    return 'possible';
+  }
+
   return 'unlikely';
 }
 
-function normalizeFitScore(total) {
-  return Math.max(0, Math.min(100, Math.round((total / 18) * 100)));
+function ensureUnlikelyExplanation(explanation, item, review) {
+  if (!explanation) {
+    return buildUnlikelyReason(item, review);
+  }
+
+  const lower = explanation.toLowerCase();
+
+  if (
+    lower.includes('unlikely') ||
+    lower.includes('less aligned') ||
+    lower.includes('weaker fit') ||
+    lower.includes('not the strongest route') ||
+    lower.includes('less direct')
+  ) {
+    return explanation;
+  }
+
+  return `${explanation} ${buildUnlikelyReason(item, review)}`.trim();
+}
+
+function buildUnlikelyReason(item, review) {
+  const issues = [];
+
+  if (item.fitBreakdown.businessType <= 1) {
+    issues.push('the business type is not a strong match');
+  }
+
+  if (item.fitBreakdown.projectGoal <= 1) {
+    issues.push('the stated project goal lines up better with another route');
+  }
+
+  if (item.fitBreakdown.rural === 0) {
+    issues.push('the rural or territorial fit is weak for this programme');
+  }
+
+  if (item.fitBreakdown.context <= 1 && review.consistency !== 'consistent') {
+    issues.push('the written context introduces mixed signals');
+  }
+
+  if (item.routeContext?.commonConstraints?.length) {
+    issues.push(
+      `the route still requires verification against constraints such as ${item.routeContext.commonConstraints[0].toLowerCase()}`,
+    );
+  }
+
+  if (issues.length === 0) {
+    issues.push('the route is currently weaker than the higher-ranked alternatives');
+  }
+
+  return `At the moment, this route is less direct because ${issues.slice(0, 2).join(' and ')}.`;
+}
+
+function adjustScoreForAmbiguity(baseScore, profile, review) {
+  let score = baseScore;
+  const farmAnchoredCapCase =
+    profile.businessType === 'farm' &&
+    profile.ruralArea === 'yes' &&
+    ['buyEquipment', 'sustainabilityUpgrade'].includes(profile.mainGoal);
+
+  if (profile.businessType === 'farm' && review.signals.serviceHits >= 2 && review.signals.capHits === 0) {
+    score -= 12;
+  }
+
+  if (review.signals.capHits > 0 && review.signals.erdfHits > 0) {
+    score += 4;
+  }
+
+  if (farmAnchoredCapCase) {
+    if (review.signals.capHits >= review.signals.erdfHits) {
+      score += 8;
+    } else {
+      score += 4;
+    }
+  }
+
+  if (review.consistency === 'consistent') {
+    score += 4;
+  }
+
+  if (review.consistency === 'conflicting') {
+    score -= 6;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function determineEligibility(score) {
+  if (score >= 74) return 'likely';
+  if (score >= 48) return 'possible';
+  return 'unlikely';
+}
+
+function buildRecommendationTitle(program, route, language) {
+  if (!route?.programmeTitle) {
+    return program.name;
+  }
+
+  const pathwayLabels = {
+    en: {
+      'cap-rural-development-grant': 'rural investment pathway',
+      'cap-green-transition-support': 'green transition pathway',
+      'erdf-sme-digitalisation-grant': 'SME digitalisation pathway',
+      'erdf-regional-growth-fund': 'regional growth pathway',
+    },
+    es: {
+      'cap-rural-development-grant': 'vía de inversión rural',
+      'cap-green-transition-support': 'vía de transición verde',
+      'erdf-sme-digitalisation-grant': 'vía de digitalización pyme',
+      'erdf-regional-growth-fund': 'vía de crecimiento regional',
+    },
+    it: {
+      'cap-rural-development-grant': 'percorso di investimento rurale',
+      'cap-green-transition-support': 'percorso di transizione verde',
+      'erdf-sme-digitalisation-grant': 'percorso di digitalizzazione PMI',
+      'erdf-regional-growth-fund': 'percorso di crescita regionale',
+    },
+    pl: {
+      'cap-rural-development-grant': 'ścieżka inwestycji wiejskich',
+      'cap-green-transition-support': 'ścieżka zielonej transformacji',
+      'erdf-sme-digitalisation-grant': 'ścieżka cyfryzacji MŚP',
+      'erdf-regional-growth-fund': 'ścieżka wzrostu regionalnego',
+    },
+    fr: {
+      'cap-rural-development-grant': 'parcours d’investissement rural',
+      'cap-green-transition-support': 'parcours de transition verte',
+      'erdf-sme-digitalisation-grant': 'parcours de numérisation PME',
+      'erdf-regional-growth-fund': 'parcours de croissance régionale',
+    },
+  };
+
+  const pathway =
+    pathwayLabels[language]?.[program.id] ||
+    pathwayLabels.en[program.id];
+
+  return pathway ? `${route.programmeTitle} - ${pathway}` : route.programmeTitle;
+}
+
+function getNarrativeBusinessSize(size, language) {
+  const labels = {
+    en: {
+      micro: 'micro',
+      small: 'small',
+      medium: 'medium-sized',
+    },
+    es: {
+      micro: 'micro',
+      small: 'pequeña',
+      medium: 'mediana',
+    },
+    it: {
+      micro: 'micro',
+      small: 'piccola',
+      medium: 'media',
+    },
+    pl: {
+      micro: 'mikro',
+      small: 'mała',
+      medium: 'średnia',
+    },
+    fr: {
+      micro: 'micro',
+      small: 'petite',
+      medium: 'moyenne',
+    },
+  };
+
+  return labels[language]?.[size] || labels.en[size] || 'small';
+}
+
+function normalizeFitScore(breakdown) {
+  const weightedScore =
+    (breakdown.businessType / 4) * FIT_WEIGHTS.businessType +
+    (breakdown.projectGoal / 4) * FIT_WEIGHTS.projectGoal +
+    (breakdown.rural / 3) * FIT_WEIGHTS.rural +
+    (breakdown.size / 2) * FIT_WEIGHTS.size +
+    (breakdown.context / 3) * FIT_WEIGHTS.context +
+    (breakdown.routeFit / 3) * FIT_WEIGHTS.routeFit;
+
+  return Math.max(0, Math.min(100, Math.round(weightedScore)));
 }
 
 function buildFitBreakdown(program, profile, review, route) {
@@ -370,6 +662,7 @@ function buildFitBreakdown(program, profile, review, route) {
   let size = 0;
   let context = 0;
   let routeFit = 0;
+  const otherGoalText = (profile.otherMainGoal || '').toLowerCase();
 
   if (program.supportedBusinessTypes?.includes(profile.businessType)) {
     businessType = 4;
@@ -397,12 +690,26 @@ function buildFitBreakdown(program, profile, review, route) {
     ['digitize', 'expandOperations', 'hireStaff'].includes(profile.mainGoal)
   ) {
     projectGoal = 2;
+  } else if (profile.mainGoal === 'other') {
+    if (
+      program.fundType === 'CAP' &&
+      /sustain|irrigat|equipment|land|farm|green|water|crop/.test(otherGoalText)
+    ) {
+      projectGoal = 2;
+    } else if (
+      program.fundType === 'ERDF' &&
+      /digit|website|software|booking|ecommerce|expand|growth|staff|innovation/.test(
+        otherGoalText,
+      )
+    ) {
+      projectGoal = 2;
+    }
   }
 
   if (program.ruralRequired) {
     rural = profile.ruralArea === 'yes' ? 3 : 0;
   } else {
-    rural = profile.ruralArea === 'yes' && program.fundType === 'ERDF' ? 1 : 2;
+    rural = profile.ruralArea === 'yes' && program.fundType === 'ERDF' ? 0 : 2;
   }
 
   if (program.supportedSizes?.includes(profile.businessSize)) {
@@ -416,10 +723,24 @@ function buildFitBreakdown(program, profile, review, route) {
     if (review.signals.serviceHits >= 2 && review.signals.capHits === 0) {
       context = Math.max(0, context - 1);
     }
+    if (
+      profile.businessType === 'farm' &&
+      profile.ruralArea === 'yes' &&
+      ['buyEquipment', 'sustainabilityUpgrade'].includes(profile.mainGoal)
+    ) {
+      context += 1;
+    }
   } else {
     context += Math.min(review.signals.erdfHits, 2);
     if (review.signals.serviceHits > 0) {
       context += 1;
+    }
+    if (
+      profile.businessType === 'farm' &&
+      profile.ruralArea === 'yes' &&
+      ['buyEquipment', 'sustainabilityUpgrade'].includes(profile.mainGoal)
+    ) {
+      context = Math.max(0, context - 1);
     }
   }
 
@@ -530,7 +851,12 @@ function buildDraftSupport({
   const programmeDescription = program?.description || '';
   const eligibilityHint = program?.eligibilityHint || '';
   const contextProfile = getContextProfile(review, language);
-  const routeApplicantText = route?.targetApplicants || programmeFocus.applicantLead;
+  const routeApplicantText =
+    route?.targetApplicants ||
+    programmeFocus.applicantLead ||
+    (isCAP
+      ? 'farmers, agricultural businesses, and rural producers'
+      : 'SMEs, regional businesses, and innovation-led applicants');
 
   if (language === 'en') {
     return {
@@ -1504,15 +1830,15 @@ function genericBusinessReference(language) {
 }
 
 function shouldTryHostedAi() {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
   if (import.meta.env.VITE_USE_HOSTED_AI === 'true') {
     return true;
   }
 
-  return !['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (import.meta.env.VITE_USE_HOSTED_AI === 'false') {
+    return false;
+  }
+
+  return true;
 }
 
 async function generateHostedRecommendations(profile, localRecommendations) {
@@ -1540,38 +1866,26 @@ async function generateHostedRecommendations(profile, localRecommendations) {
   return data;
 }
 
-async function generateOllamaRecommendations(profile, localRecommendations) {
-  const language = profile.preferredLanguage || defaultLanguage;
-  const prompt = buildAiPrompt(profile, localRecommendations, language);
-
-  const response = await fetch(OLLAMA_ENDPOINT, {
+async function generateHostedAssistantResponse(payload) {
+  const response = await fetch(HOSTED_ASSISTANT_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      prompt,
-      stream: false,
-      format: 'json',
-      options: {
-        temperature: 0.35,
-      },
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    throw new Error(`Ollama request failed with status ${response.status}`);
+    throw new Error(`Hosted assistant request failed with status ${response.status}`);
   }
 
   const data = await response.json();
-  const parsed = parseJsonPayload(data.response);
 
-  if (!parsed || !Array.isArray(parsed.recommendations)) {
-    throw new Error('Ollama returned invalid recommendation JSON.');
+  if (!data || typeof data.answer !== 'string') {
+    throw new Error('Hosted assistant returned invalid JSON.');
   }
 
-  return parsed;
+  return data;
 }
 
 export function buildAiPrompt(profile, localRecommendations, language) {
@@ -1620,13 +1934,15 @@ Requirements:
 - Respect contradictions or ambiguity between structured inputs and free text.
 - Do not invent new programmes.
 - Do not guarantee eligibility.
+- Make the eligibility label consistent with the ranking and explanation. Do not mark a top-ranked, high-fit route as "unlikely" unless you clearly state the disqualifying reason.
 - Keep each explanation to 3-4 sentences.
 - Keep next steps concise.
-- Draft application support should feel practical, prefilled, and clearly differentiated for each specific programme route.
 - Use routeDetails and routeContext so each recommendation mentions the correct programme logic, region, authority, likely applicant type, and regional constraints.
 - Avoid repeating the same sentence structure across recommendation cards.
 - You may re-rank the candidates freely using the ids provided.
 - Let the route data and the written business context drive your reasoning more than fixed assumptions about CAP or ERDF.
+- If a route is unlikely, explicitly explain why it is weaker than the other options.
+- When the profile is clearly a rural farm case with sustainability or irrigation-led investment in a CAP region, do not rank ERDF above CAP unless the written context strongly shifts the project toward a service-led or digital-first business model.
 
 Return strict JSON only in this shape:
 {
@@ -1649,18 +1965,67 @@ Return strict JSON only in this shape:
       "rankingReason": "string",
       "requirements": ["string", "string", "string"],
       "nextStep": "string",
-      "draftSupport": {
-        "projectSummary": "string",
-        "fitReason": "string",
-        "applicationAngle": "string",
-        "evidenceToPrepare": ["string", "string", "string"],
-        "preSubmissionChecklist": ["string", "string", "string"],
-        "firstAuthorityQuestion": "string",
-        "clarificationPoint": "string",
-        "verifyBeforeSubmit": "string"
-      }
     }
   ]
+}
+
+Data:
+${JSON.stringify(promptPayload, null, 2)}`;
+}
+
+export function buildAssistantPrompt({
+  question,
+  language,
+  submittedProfile,
+  profileReview,
+  results,
+  currentScreen,
+}) {
+  const languageNames = {
+    en: 'English',
+    es: 'Spanish',
+    it: 'Italian',
+    pl: 'Polish',
+    fr: 'French',
+  };
+
+  const promptPayload = {
+    preferredLanguage: languageNames[language] || 'English',
+    currentScreen,
+    userQuestion: question,
+    businessProfile: submittedProfile,
+    profileReview,
+    recommendationSnapshot: results.slice(0, 3).map((item) => ({
+      id: item.id,
+      name: item.name,
+      fundType: item.fundType,
+      fitScore: item.fitScore,
+      eligibility: item.eligibility,
+      routeDetails: item.routeDetails,
+      routeSummary: item.routeSummary,
+      nextStep: item.nextStep,
+      applicationPage: item.applicationPage,
+      officialPage: item.officialPage,
+    })),
+  };
+
+  return `You are Clover, the FundWise Rural assistant.
+
+Write all user-facing text in ${languageNames[language] || 'English'}.
+
+Style requirements:
+- Friendly, clear, and lightly witty.
+- Professional enough for a public-sector funding tool.
+- Answer like a helpful guide, not like a chatbot cliche.
+- Keep answers concise: usually 2 short paragraphs or 3 bullets max.
+- Explain CAP, ERDF, grant fit, and next steps in everyday language.
+- If the user asks why a route is weak or unlikely, explain the specific reason.
+- If the information is missing, say what is not known yet and what the user should check next.
+- Never invent programmes, deadlines, or guarantees.
+
+Return strict JSON only:
+{
+  "answer": "string"
 }
 
 Data:
@@ -1690,6 +2055,61 @@ function parseJsonPayload(rawText) {
   }
 }
 
+function sanitizeAssistantAnswer(answer, fallback) {
+  return typeof answer === 'string' && answer.trim() ? answer.trim() : fallback;
+}
+
+function buildLocalAssistantResponse({
+  question,
+  language,
+  submittedProfile,
+  profileReview,
+  results,
+  currentScreen,
+}) {
+  const copy = getTranslation(language || defaultLanguage);
+  const normalizedQuestion = normalizeComparable(question);
+  const topResult = results?.[0];
+  const businessName = submittedProfile?.businessName || genericBusinessReference(language);
+
+  if (!submittedProfile && currentScreen === 'form') {
+    return 'I can help as you fill this out. Share what the business does, where it is based, and what you want to fund, and I will point the form in the right direction before the full recommendation run.';
+  }
+
+  if (/what.*cap|cap mean|explain cap/.test(normalizedQuestion)) {
+    return 'CAP is the EU funding family most connected to farming and rural development. In everyday terms, it is usually the route to look at when a project is mainly about agriculture, land-based activity, sustainability upgrades, or rural production.';
+  }
+
+  if (/what.*erdf|erdf mean|explain erdf/.test(normalizedQuestion)) {
+    return 'ERDF is the EU funding family that usually supports business growth, modernisation, digital tools, and regional economic development. In plain language, it is often the better fit when the project is more about improving the business than supporting agricultural production itself.';
+  }
+
+  if (/why.*top|why.*match|why.*recommend/.test(normalizedQuestion) && topResult) {
+    return `${topResult.name} is leading because it lines up best with the business profile, the project goal, and the route context in ${topResult.routeDetails.region}. The tool is reading this as a ${profileReview?.routeClassification || 'mixed'} case, so this option stays on top because it is the most direct place to start rather than just the most generous-sounding grant.`;
+  }
+
+  if (/unlikely|weak|why.*not/.test(normalizedQuestion) && results?.length) {
+    const weakerResult = results.find((item) => item.eligibility === 'unlikely') || results[results.length - 1];
+    if (weakerResult) {
+      return `${weakerResult.name} is weaker because its route logic does not match the business profile as closely as the higher-ranked option. Usually that means the business type, the project goal, or the rural-versus-growth angle fits another fund family better.`;
+    }
+  }
+
+  if (/next|apply|start|where do i go/.test(normalizedQuestion) && topResult) {
+    return `For ${businessName}, the cleanest next move is to start with ${topResult.routeDetails.programme} and read the official route page before drafting anything formal. Then use the result details to check the applicant type, regional fit, and timing so you do not over-prepare for the wrong fund.`;
+  }
+
+  if (/timeline|how long|when/.test(normalizedQuestion) && topResult?.estimatedTimeline) {
+    return `The current estimate for ${topResult.name} is: ${topResult.estimatedTimeline.prep} ${topResult.estimatedTimeline.submit} ${topResult.estimatedTimeline.review} It is still a prototype estimate, so the real timing depends on the live call and authority workflow.`;
+  }
+
+  if (topResult) {
+    return `I can help unpack the current recommendation if anything feels vague. Right now the strongest route is ${topResult.name}, and I can explain the fit, compare it with the other options, or suggest what to verify before you click out to the official page.`;
+  }
+
+  return `${businessName} is still in the early intake stage, so I can help explain the questions, the CAP versus ERDF difference, or what details usually matter most before you run the recommendation.`;
+}
+
 function mergeRecommendations(localRecommendations, modelRecommendations) {
   const modelMap = new Map(
     modelRecommendations.map((item) => [item.id, item]),
@@ -1712,20 +2132,7 @@ function mergeRecommendations(localRecommendations, modelRecommendations) {
         rankingScore:
           typeof modelItem.rankingScore === 'number' ? modelItem.rankingScore : item.rankingScore,
         rankingReason: modelItem.rankingReason || item.rankingReason,
-        draftSupport: {
-          ...item.draftSupport,
-          ...modelItem.draftSupport,
-          evidenceToPrepare:
-            Array.isArray(modelItem.draftSupport?.evidenceToPrepare) &&
-            modelItem.draftSupport.evidenceToPrepare.length > 0
-              ? modelItem.draftSupport.evidenceToPrepare
-              : item.draftSupport.evidenceToPrepare,
-          preSubmissionChecklist:
-            Array.isArray(modelItem.draftSupport?.preSubmissionChecklist) &&
-            modelItem.draftSupport.preSubmissionChecklist.length > 0
-              ? modelItem.draftSupport.preSubmissionChecklist
-              : item.draftSupport.preSubmissionChecklist,
-        },
+        draftSupport: item.draftSupport,
       };
     })
     .sort((left, right) => right.rankingScore - left.rankingScore);

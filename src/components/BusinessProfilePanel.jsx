@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   agricultureSubTypeOptions,
   businessSizeOptions,
@@ -24,9 +24,11 @@ const initialFormData = {
   businessSize: '',
   yearsInOperation: '',
   mainGoal: '',
+  otherMainGoal: '',
   ruralArea: '',
   additionalContext: '',
   specialTags: [],
+  grantScopePreference: '',
 };
 
 const demoProfiles = {
@@ -40,6 +42,7 @@ const demoProfiles = {
     businessSize: 'micro',
     yearsInOperation: '2-5',
     mainGoal: 'sustainabilityUpgrade',
+    otherMainGoal: '',
     ruralArea: 'yes',
     additionalContext:
       'We run a small flower-growing farm in rural Andalusia. We want support for irrigation upgrades, sustainability improvements, and a better website for direct sales.',
@@ -55,6 +58,7 @@ const demoProfiles = {
     businessSize: 'small',
     yearsInOperation: '2-5',
     mainGoal: 'digitize',
+    otherMainGoal: '',
     ruralArea: 'no',
     additionalContext:
       'We are a growing hospitality and design business serving tourism clients. We want funding for a new website, booking tools, ecommerce improvements, and better internal software.',
@@ -70,20 +74,61 @@ const demoProfiles = {
     businessSize: 'micro',
     yearsInOperation: '6+',
     mainGoal: 'digitize',
+    otherMainGoal: '',
     ruralArea: 'yes',
     additionalContext:
       'We grow flowers on family land but also do floral design for weddings and urban retail clients. We need irrigation improvements, ecommerce, online booking, and digital tools for expansion.',
     specialTags: ['sustainable', 'innovative', 'womenOwned'],
   },
+  mock: {
+    preferredLanguage: 'en',
+    businessName: 'SunPath Studio',
+    country: 'france',
+    region: 'occitanie',
+    businessType: 'service',
+    agricultureSubType: '',
+    businessSize: 'small',
+    yearsInOperation: '2-5',
+    mainGoal: 'digitize',
+    otherMainGoal: '',
+    ruralArea: 'no',
+    additionalContext:
+      'We are a growing hospitality and design business in Occitanie and want to prepare a stronger first-stage grant application for digital booking, ecommerce improvements, and internal software upgrades.',
+    specialTags: ['innovative', 'womenOwned'],
+  },
 };
 
-function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
+function BusinessProfilePanel({
+  onSubmitProfile,
+  language,
+  onLanguageChange,
+  initialProfile,
+  previewMode = false,
+  isDeveloperMode = false,
+}) {
   const [formData, setFormData] = useState(initialFormData);
   const copy = getTranslation(language);
   const availableRegions = regionsByCountry[formData.country] ?? [];
   const showAgricultureSubType = ['farm', 'foodProducer', 'agriTourism'].includes(
     formData.businessType,
   );
+  const showOtherMainGoal = formData.mainGoal === 'other';
+
+  useEffect(() => {
+    if (!initialProfile) {
+      return;
+    }
+
+    setFormData((currentData) => ({
+      ...currentData,
+      ...initialProfile,
+      preferredLanguage: initialProfile.preferredLanguage || currentData.preferredLanguage || language,
+    }));
+
+    if (initialProfile.preferredLanguage) {
+      onLanguageChange(initialProfile.preferredLanguage);
+    }
+  }, [initialProfile, language, onLanguageChange]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -109,6 +154,16 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
         agricultureSubType: ['farm', 'foodProducer', 'agriTourism'].includes(value)
           ? currentData.agricultureSubType
           : '',
+      }));
+
+      return;
+    }
+
+    if (name === 'mainGoal') {
+      setFormData((currentData) => ({
+        ...currentData,
+        mainGoal: value,
+        otherMainGoal: value === 'other' ? currentData.otherMainGoal : '',
       }));
 
       return;
@@ -150,17 +205,27 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
   return (
     <section className="intake-shell" aria-labelledby="business-profile-title">
-      <div className="intake-card">
+      <div className={`intake-card${previewMode ? ' intake-card-preview' : ''}`}>
         <div className="intake-intro">
           <p className="eyebrow">{copy.intakeEyebrow}</p>
           <h2 id="business-profile-title">{copy.intakeTitle}</h2>
           <p className="panel-copy">{copy.intakeDescription}</p>
+          {initialProfile && (
+            <p className="agent-prefill-note">
+              The AI guide prefilled a few fields for you. Review and adjust anything before running the full recommendation flow.
+            </p>
+          )}
         </div>
 
-        <form className="business-profile-form" onSubmit={handleSubmit}>
+        <form
+          className={`business-profile-form${previewMode ? ' business-profile-form-preview' : ''}`}
+          onSubmit={handleSubmit}
+        >
+          <fieldset className="form-preview-fieldset" disabled={previewMode}>
           <div className="language-row">
             <div className="form-field language-field">
               <label htmlFor="preferredLanguage">{copy.labels.preferredLanguage}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.preferredLanguage}</p>
               <select
                 id="preferredLanguage"
                 name="preferredLanguage"
@@ -181,6 +246,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="businessName">{copy.labels.businessName}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.businessName}</p>
               <input
                 id="businessName"
                 name="businessName"
@@ -194,6 +260,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="country">{copy.labels.country}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.country}</p>
               <select
                 id="country"
                 name="country"
@@ -211,6 +278,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="region">{copy.labels.region}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.region}</p>
               <select
                 id="region"
                 name="region"
@@ -228,6 +296,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="businessType">{copy.labels.businessType}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.businessType}</p>
               <select
                 id="businessType"
                 name="businessType"
@@ -246,6 +315,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
             {showAgricultureSubType && (
               <div className="form-field">
                 <label htmlFor="agricultureSubType">{copy.labels.agricultureSubType}</label>
+                <p className="field-help">{copy.intakeFieldHelp?.agricultureSubType}</p>
                 <select
                   id="agricultureSubType"
                   name="agricultureSubType"
@@ -264,6 +334,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="businessSize">{copy.labels.businessSize}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.businessSize}</p>
               <select
                 id="businessSize"
                 name="businessSize"
@@ -281,6 +352,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="yearsInOperation">{copy.labels.yearsInOperation}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.yearsInOperation}</p>
               <select
                 id="yearsInOperation"
                 name="yearsInOperation"
@@ -298,6 +370,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <div className="form-field">
               <label htmlFor="mainGoal">{copy.labels.mainGoal}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.mainGoal}</p>
               <select
                 id="mainGoal"
                 name="mainGoal"
@@ -313,8 +386,24 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
               </select>
             </div>
 
+            {showOtherMainGoal && (
+              <div className="form-field">
+                <label htmlFor="otherMainGoal">{copy.labels.otherMainGoal}</label>
+                <p className="field-help">{copy.intakeFieldHelp?.otherMainGoal}</p>
+                <textarea
+                  id="otherMainGoal"
+                  name="otherMainGoal"
+                  rows="3"
+                  value={formData.otherMainGoal}
+                  onChange={handleInputChange}
+                  placeholder={copy.otherMainGoalPlaceholder}
+                />
+              </div>
+            )}
+
             <div className="form-field">
               <label htmlFor="ruralArea">{copy.labels.ruralArea}</label>
+              <p className="field-help">{copy.intakeFieldHelp?.ruralArea}</p>
               <select
                 id="ruralArea"
                 name="ruralArea"
@@ -332,6 +421,7 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
 
             <fieldset className="form-field checkbox-group">
               <legend>{copy.labels.specialTags}</legend>
+              <p className="field-help">{copy.intakeFieldHelp?.specialTags}</p>
               <div className="checkbox-list">
                 {specialTagOptions.map((tag) => (
                   <label key={tag.value} className="checkbox-item">
@@ -365,33 +455,43 @@ function BusinessProfilePanel({ onSubmitProfile, language, onLanguageChange }) {
           </div>
 
           <div className="form-actions">
-            <div className="demo-actions">
-              <button
-                type="button"
-                className="secondary-button demo-button"
-                onClick={() => handleDemoFill('cap')}
-              >
-                {copy.demoCapProfile || 'CAP Demo'}
-              </button>
-              <button
-                type="button"
-                className="secondary-button demo-button"
-                onClick={() => handleDemoFill('erdf')}
-              >
-                {copy.demoErdfProfile || 'ERDF Demo'}
-              </button>
-              <button
-                type="button"
-                className="secondary-button demo-button"
-                onClick={() => handleDemoFill('mixed')}
-              >
-                {copy.demoMixedProfile || 'Mixed Demo'}
-              </button>
-            </div>
+            {isDeveloperMode && (
+              <div className="demo-actions">
+                <button
+                  type="button"
+                  className="secondary-button demo-button"
+                  onClick={() => handleDemoFill('cap')}
+                >
+                  {copy.demoCapProfile || 'CAP Demo'}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button demo-button"
+                  onClick={() => handleDemoFill('erdf')}
+                >
+                  {copy.demoErdfProfile || 'ERDF Demo'}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button demo-button"
+                  onClick={() => handleDemoFill('mixed')}
+                >
+                  {copy.demoMixedProfile || 'Mixed Demo'}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button demo-button"
+                  onClick={() => handleDemoFill('mock')}
+                >
+                  {copy.demoMockApplication || 'Mock Form Demo'}
+                </button>
+              </div>
+            )}
             <button type="submit" className="primary-button primary-button-large">
               {copy.findFunding}
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </section>

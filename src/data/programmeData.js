@@ -8,6 +8,8 @@ export const programmeData = [
     officialPage:
       'https://agriculture.ec.europa.eu/cap-my-country/cap-strategic-plans/spain_en',
     applicationPage: 'https://www.mapa.gob.es/es/pac/ayudas-2023-2027/',
+    supportsMockApplication: false,
+    applicationRouteType: 'official-entry',
     authority: 'Spanish Ministry of Agriculture + Regional Authorities',
     summary:
       'Spain’s CAP Strategic Plan provides agricultural and rural development support, implemented with regional specificities including Andalusia.',
@@ -39,6 +41,8 @@ export const programmeData = [
       'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes/european-regional-development-fund-erdf_en',
     applicationPage:
       'https://www.juntadeandalucia.es/organismos/economiahaciendayfondoseuropeos/areas/fondos-europeos-andalucia/gestion/expresiones-interes/paginas/programa-feder-2127.html',
+    supportsMockApplication: false,
+    applicationRouteType: 'programme-entry',
     authority: 'Junta de Andalucía',
     summary:
       'ERDF in Andalusia supports SME growth, digitalisation, innovation, and regional competitiveness.',
@@ -67,6 +71,8 @@ export const programmeData = [
     officialPage:
       'https://agriculture.ec.europa.eu/cap-my-country/cap-strategic-plans/italy_en',
     applicationPage: 'https://www.politicheagricole.it/PAC2023-2027',
+    supportsMockApplication: false,
+    applicationRouteType: 'official-entry',
     authority: 'Italian Ministry of Agriculture + Sicilian Regional Authorities',
     summary:
       'Italy’s CAP Strategic Plan supports farm investment and rural development, with implementation shaped by regional priorities including Sicily.',
@@ -97,6 +103,8 @@ export const programmeData = [
     officialPage:
       'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes/european-regional-development-fund-erdf_en',
     applicationPage: 'https://www.fesr.regione.lombardia.it/',
+    supportsMockApplication: false,
+    applicationRouteType: 'programme-entry',
     authority: 'Regione Lombardia',
     summary:
       'ERDF in Lombardy supports SME growth, innovation, research capacity, and digital transformation.',
@@ -127,6 +135,8 @@ export const programmeData = [
       'https://agriculture.ec.europa.eu/cap-my-country/cap-strategic-plans/poland_en',
     applicationPage:
       'https://www.gov.pl/web/arimr/plan-strategiczny-dla-wspolnej-polityki-rolnej-na-lata-2023-2027',
+    supportsMockApplication: false,
+    applicationRouteType: 'official-entry',
     authority: 'Polish Ministry of Agriculture + ARiMR',
     summary:
       'Poland’s CAP Strategic Plan supports agricultural development and rural investment, with implementation affecting regions including Mazowieckie.',
@@ -157,6 +167,8 @@ export const programmeData = [
     officialPage:
       'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes/european-regional-development-fund-erdf_en',
     applicationPage: 'https://www.europe-en-occitanie.eu/Deposer-mon-dossier',
+    supportsMockApplication: true,
+    applicationRouteType: 'direct-submission',
     authority: 'Région Occitanie',
     summary:
       'ERDF in Occitanie supports regional innovation, SME development, digital transition, and competitiveness.',

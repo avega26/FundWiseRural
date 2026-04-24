@@ -51,6 +51,7 @@ export const mainGoalOptions = [
   { value: 'digitize', labelKey: 'digitize' },
   { value: 'sustainabilityUpgrade', labelKey: 'sustainabilityUpgrade' },
   { value: 'hireStaff', labelKey: 'hireStaff' },
+  { value: 'other', labelKey: 'other' },
 ];
 
 export const ruralAreaOptions = [
@@ -117,7 +118,7 @@ export const translations = {
     aiDisclaimer:
       'This recommendation is AI-assisted and may prefill guidance text, but applicants should verify all details against the official programme criteria before submitting.',
     aiProfileReview: 'AI Profile Review',
-    aiReasoningTrace: 'AI Reasoning Trace',
+    aiReasoningTrace: 'How This Was Matched',
     confidenceLevel: 'Confidence level',
     consistencyStatus: 'Consistency status',
     primaryRoute: 'Primary route',
@@ -140,12 +141,15 @@ export const translations = {
     helpfulQuestion: 'Was this result helpful?',
     helpfulYes: 'Yes',
     helpfulNo: 'No',
+    helpfulThanksYes: 'Thanks. Your feedback was recorded.',
+    helpfulThanksNo: 'Thanks. Your feedback was recorded and will help improve the prototype.',
     startOver: 'Start Over',
     findFunding: 'Find Funding',
     useDemoProfile: 'Use Demo Profile',
     demoCapProfile: 'CAP Demo',
     demoErdfProfile: 'ERDF Demo',
     demoMixedProfile: 'Mixed Demo',
+    demoMockApplication: 'Mock Form Demo',
     selectPlaceholder: 'Please select',
     regionPlaceholder: 'Select a region',
     businessNamePlaceholder: 'Enter your business name',
@@ -153,6 +157,22 @@ export const translations = {
       'Describe your business, your project, or anything else you want the system to consider. For example: we run a family-owned rural tourism business and want funding to improve our website and sustainability practices.',
     additionalContextHelp:
       'Use this box to describe the project in plain language. Mention things like equipment, sustainability, website upgrades, bookings, crops, or customer needs.',
+    intakeFieldHelp: {
+      preferredLanguage: 'Choose the language you want the tool to use across the form and results.',
+      businessName: 'Enter the name of the business or applicant that will appear in the recommendations.',
+      country: 'Select the country where the business is based or where the project will be submitted.',
+      region: 'Choose the region linked to the business or the route you expect to apply through.',
+      businessType: 'Pick the main type of business activity so the tool can narrow the right funding family.',
+      agricultureSubType: 'If the business is agriculture-related, choose the closest activity area.',
+      businessSize: 'Use the EU SME size range that best matches the business today.',
+      yearsInOperation: 'This helps show whether the business is very new, established, or growing.',
+      mainGoal: 'Choose the main purpose of the funding request.',
+      otherMainGoal: 'Briefly explain the goal if none of the listed options fits well.',
+      ruralArea: 'Tell the tool whether the project is based in, or strongly tied to, a rural area.',
+      specialTags: 'These are contextual business characteristics that can strengthen framing, but not replace programme criteria.',
+    },
+    otherMainGoalPlaceholder:
+      'Briefly explain the main goal you want the tool to consider.',
     summary: (fundType, businessName) =>
       businessName
         ? `Based on ${businessName}'s profile, ${fundType} funding appears most relevant.`
@@ -208,6 +228,42 @@ export const translations = {
     clarificationPoint: 'Clarification point',
     verifyBeforeSubmit: 'Verify before submitting',
     downloadResults: 'Download results',
+    openMockApplication: 'Open mock application',
+    backToResults: 'Back to results',
+    mockApplicationEyebrow: 'Mock Grant Form',
+    mockApplicationTitle: 'Mock first-step application',
+    mockApplicationDescription:
+      'This demo form shows how the intake profile and AI guidance could prefill a first-stage public funding application.',
+    mockApplicationHelper:
+      'Use the button below to pull in the intake form responses and AI-generated guidance as a draft for the first application step.',
+    populateMockApplication: 'Populate from intake + AI summary',
+    mockApplicationPrefilled:
+      'The draft below was prefilled from the intake form, top recommendation, and AI-generated support text.',
+    mockApplicantName: 'Applicant name',
+    mockProgrammeRoute: 'Programme route',
+    mockLocation: 'Project location',
+    mockProjectTitle: 'Project title',
+    mockAccountTitle: 'Create an account to track this application',
+    mockAccountDescription:
+      'This is a demo-only placeholder showing how applicants could create an account to save progress, return later, and track status updates.',
+    mockCreateAccount: 'Create account',
+    mockSignIn: 'Sign in',
+    mockSubmitButton: 'Submit application',
+    mockSubmitDisclaimer:
+      'Demo only: this submit action is not connected to a real backend or government application portal yet.',
+    showFullResult: 'Show full result',
+    generateDraftSupport: 'Generate draft application support',
+    draftSupportPrompt:
+      'Generate this section only if you want a fuller application-preparation draft for this route.',
+    learnMoreLabel: 'Learn more',
+    fundTypeExplainers: {
+      CAP: 'CAP is the EU funding route that usually helps farms and rural producers pay for things like equipment, sustainability upgrades, and agricultural improvements.',
+      ERDF: 'ERDF is the EU funding route that usually helps businesses grow through digital tools, expansion, innovation, and regional economic development.',
+    },
+    generalGrantTitle: 'EU-wide opportunities',
+    generalGrantDescription:
+      'These are broader EU-wide programmes that may also be worth exploring alongside the main regional match.',
+    openGeneralGrant: 'Open grant info',
     reviewLabels: {
       high: 'High',
       medium: 'Medium',
@@ -228,6 +284,7 @@ export const translations = {
       businessSize: 'Business Size (EU SME definition)',
       yearsInOperation: 'Years in Operation',
       mainGoal: 'Main Goal',
+      otherMainGoal: 'Please explain the main goal',
       ruralArea: 'Rural Area',
       specialTags: 'Special Tags',
       additionalContext: 'Additional Business Context (optional)',
@@ -270,6 +327,7 @@ export const translations = {
       digitize: 'Digitize',
       sustainabilityUpgrade: 'Sustainability upgrade',
       hireStaff: 'Hire staff',
+      other: 'Other',
     },
     ruralAreaOptions: {
       yes: 'Yes',
@@ -311,7 +369,7 @@ export const translations = {
     aiDisclaimer:
       'Esta recomendación está asistida por IA y puede rellenar texto de orientación, pero los solicitantes deben verificar todos los detalles con los criterios oficiales del programa antes de presentar la solicitud.',
     aiProfileReview: 'Revisión del perfil por IA',
-    aiReasoningTrace: 'Trazado de razonamiento de IA',
+    aiReasoningTrace: 'Cómo se hizo esta coincidencia',
     confidenceLevel: 'Nivel de confianza',
     consistencyStatus: 'Estado de coherencia',
     primaryRoute: 'Ruta principal',
@@ -334,6 +392,8 @@ export const translations = {
     helpfulQuestion: '¿Fue útil este resultado?',
     helpfulYes: 'Sí',
     helpfulNo: 'No',
+    helpfulThanksYes: 'Gracias. Hemos registrado tus comentarios.',
+    helpfulThanksNo: 'Gracias. Hemos registrado tus comentarios y nos ayudarán a mejorar el prototipo.',
     startOver: 'Empezar de nuevo',
     findFunding: 'Buscar financiación',
     useDemoProfile: 'Usar perfil de demo',
@@ -347,6 +407,8 @@ export const translations = {
       'Describa su empresa, su proyecto o cualquier otra información que quiera que el sistema tenga en cuenta. Por ejemplo: gestionamos un negocio familiar de turismo rural y queremos financiación para mejorar nuestra web y nuestras prácticas de sostenibilidad.',
     additionalContextHelp:
       'Use este campo para describir el proyecto en lenguaje sencillo. Mencione elementos como equipamiento, sostenibilidad, web, reservas, cultivos o necesidades de clientes.',
+    otherMainGoalPlaceholder:
+      'Explique brevemente el objetivo principal que quiere que la herramienta tenga en cuenta.',
     summary: (fundType, businessName) =>
       businessName
         ? `Según el perfil de ${businessName}, la financiación ${fundType} parece la más relevante.`
@@ -422,6 +484,7 @@ export const translations = {
       businessSize: 'Tamaño de la empresa (definición pyme UE)',
       yearsInOperation: 'Años en funcionamiento',
       mainGoal: 'Objetivo principal',
+      otherMainGoal: 'Explique el objetivo principal',
       ruralArea: 'Zona rural',
       specialTags: 'Etiquetas especiales',
       additionalContext: 'Contexto adicional de la empresa (opcional)',
@@ -464,6 +527,7 @@ export const translations = {
       digitize: 'Digitalizar',
       sustainabilityUpgrade: 'Mejora de sostenibilidad',
       hireStaff: 'Contratar personal',
+      other: 'Otro',
     },
     ruralAreaOptions: {
       yes: 'Sí',
@@ -505,7 +569,7 @@ export const translations = {
     aiDisclaimer:
       'Questa raccomandazione è assistita dall’IA e può precompilare testo guida, ma i candidati devono verificare tutti i dettagli rispetto ai criteri ufficiali del programma prima della candidatura.',
     aiProfileReview: 'Revisione del profilo da parte dell’IA',
-    aiReasoningTrace: 'Traccia di ragionamento IA',
+    aiReasoningTrace: 'Come è stato trovato questo abbinamento',
     confidenceLevel: 'Livello di fiducia',
     consistencyStatus: 'Stato di coerenza',
     primaryRoute: 'Percorso principale',
@@ -528,6 +592,8 @@ export const translations = {
     helpfulQuestion: 'Questo risultato è stato utile?',
     helpfulYes: 'Sì',
     helpfulNo: 'No',
+    helpfulThanksYes: 'Grazie. Il tuo feedback è stato registrato.',
+    helpfulThanksNo: 'Grazie. Il tuo feedback è stato registrato e ci aiuterà a migliorare il prototipo.',
     startOver: 'Ricomincia',
     findFunding: 'Trova finanziamenti',
     useDemoProfile: 'Usa profilo demo',
@@ -541,6 +607,8 @@ export const translations = {
       'Descriva la sua impresa, il suo progetto o qualsiasi altra informazione che desidera far considerare al sistema. Per esempio: gestiamo un’attività familiare di turismo rurale e vorremmo un finanziamento per migliorare il sito web e le pratiche di sostenibilità.',
     additionalContextHelp:
       'Usi questo campo per descrivere il progetto in modo semplice. Citi elementi come attrezzature, sostenibilità, sito web, prenotazioni, colture o bisogni dei clienti.',
+    otherMainGoalPlaceholder:
+      'Spieghi brevemente l’obiettivo principale che vuole far considerare allo strumento.',
     summary: (fundType, businessName) =>
       businessName
         ? `In base al profilo di ${businessName}, il finanziamento ${fundType} sembra il più pertinente.`
@@ -618,6 +686,7 @@ export const translations = {
       businessSize: 'Dimensione dell’impresa (definizione PMI UE)',
       yearsInOperation: 'Anni di attività',
       mainGoal: 'Obiettivo principale',
+      otherMainGoal: 'Spieghi l’obiettivo principale',
       ruralArea: 'Area rurale',
       specialTags: 'Tag speciali',
       additionalContext: 'Contesto aziendale aggiuntivo (opzionale)',
@@ -660,6 +729,7 @@ export const translations = {
       digitize: 'Digitalizzare',
       sustainabilityUpgrade: 'Miglioramento della sostenibilità',
       hireStaff: 'Assumere personale',
+      other: 'Altro',
     },
     ruralAreaOptions: {
       yes: 'Sì',
@@ -701,7 +771,7 @@ export const translations = {
     aiDisclaimer:
       'Ta rekomendacja jest wspierana przez AI i może wstępnie uzupełniać tekst pomocniczy, ale przed złożeniem wniosku należy zweryfikować wszystkie informacje względem oficjalnych kryteriów programu.',
     aiProfileReview: 'Przegląd profilu przez AI',
-    aiReasoningTrace: 'Ślad rozumowania AI',
+    aiReasoningTrace: 'Jak dopasowano ten wynik',
     confidenceLevel: 'Poziom pewności',
     consistencyStatus: 'Status spójności',
     primaryRoute: 'Główna ścieżka',
@@ -724,6 +794,8 @@ export const translations = {
     helpfulQuestion: 'Czy ten wynik był pomocny?',
     helpfulYes: 'Tak',
     helpfulNo: 'Nie',
+    helpfulThanksYes: 'Dziękujemy. Twoja opinia została zapisana.',
+    helpfulThanksNo: 'Dziękujemy. Twoja opinia została zapisana i pomoże ulepszyć prototyp.',
     startOver: 'Zacznij od nowa',
     findFunding: 'Znajdź finansowanie',
     useDemoProfile: 'Użyj profilu demo',
@@ -737,6 +809,8 @@ export const translations = {
       'Opisz swoją firmę, projekt lub wszystko inne, co system powinien wziąć pod uwagę. Na przykład: prowadzimy rodzinny biznes turystyki wiejskiej i chcemy finansowania na poprawę strony internetowej oraz działań zrównoważonych.',
     additionalContextHelp:
       'Użyj tego pola, aby prostym językiem opisać projekt. Wspomnij o sprzęcie, zrównoważeniu, stronie internetowej, rezerwacjach, uprawach lub potrzebach klientów.',
+    otherMainGoalPlaceholder:
+      'Krótko wyjaśnij główny cel, który narzędzie powinno uwzględnić.',
     summary: (fundType, businessName) =>
       businessName
         ? `Na podstawie profilu firmy ${businessName} finansowanie ${fundType} wydaje się najbardziej odpowiednie.`
@@ -812,6 +886,7 @@ export const translations = {
       businessSize: 'Wielkość firmy (definicja MŚP UE)',
       yearsInOperation: 'Lata działalności',
       mainGoal: 'Główny cel',
+      otherMainGoal: 'Wyjaśnij główny cel',
       ruralArea: 'Obszar wiejski',
       specialTags: 'Specjalne oznaczenia',
       additionalContext: 'Dodatkowy kontekst biznesowy (opcjonalnie)',
@@ -854,6 +929,7 @@ export const translations = {
       digitize: 'Cyfryzacja',
       sustainabilityUpgrade: 'Ulepszenie zrównoważonego rozwoju',
       hireStaff: 'Zatrudnić pracowników',
+      other: 'Inny',
     },
     ruralAreaOptions: {
       yes: 'Tak',
@@ -895,7 +971,7 @@ export const translations = {
     aiDisclaimer:
       'Cette recommandation est assistée par l’IA et peut préremplir un texte d’orientation, mais les candidats doivent vérifier tous les détails au regard des critères officiels du programme avant de soumettre leur dossier.',
     aiProfileReview: 'Revue du profil par l’IA',
-    aiReasoningTrace: 'Trace de raisonnement IA',
+    aiReasoningTrace: 'Comment cette correspondance a été trouvée',
     confidenceLevel: 'Niveau de confiance',
     consistencyStatus: 'Statut de cohérence',
     primaryRoute: 'Voie principale',
@@ -918,6 +994,8 @@ export const translations = {
     helpfulQuestion: 'Ce résultat vous a-t-il été utile ?',
     helpfulYes: 'Oui',
     helpfulNo: 'Non',
+    helpfulThanksYes: 'Merci. Votre retour a bien été enregistré.',
+    helpfulThanksNo: 'Merci. Votre retour a bien été enregistré et aidera à améliorer le prototype.',
     startOver: 'Recommencer',
     findFunding: 'Trouver un financement',
     useDemoProfile: 'Utiliser le profil démo',
@@ -931,6 +1009,8 @@ export const translations = {
       'Décrivez votre entreprise, votre projet ou tout autre élément que le système doit prendre en compte. Par exemple : nous gérons une entreprise familiale de tourisme rural et souhaitons un financement pour améliorer notre site web et nos pratiques de durabilité.',
     additionalContextHelp:
       'Utilisez ce champ pour décrire le projet simplement. Mentionnez par exemple les équipements, la durabilité, le site web, la réservation, les cultures ou les besoins clients.',
+    otherMainGoalPlaceholder:
+      'Expliquez brièvement l’objectif principal que l’outil doit prendre en compte.',
     summary: (fundType, businessName) =>
       businessName
         ? `D’après le profil de ${businessName}, le financement ${fundType} semble le plus pertinent.`
@@ -1008,6 +1088,7 @@ export const translations = {
       businessSize: 'Taille de l’entreprise (définition PME UE)',
       yearsInOperation: 'Années d’activité',
       mainGoal: 'Objectif principal',
+      otherMainGoal: 'Expliquez l’objectif principal',
       ruralArea: 'Zone rurale',
       specialTags: 'Étiquettes spéciales',
       additionalContext: 'Contexte supplémentaire de l’entreprise (optionnel)',
@@ -1050,6 +1131,7 @@ export const translations = {
       digitize: 'Numériser',
       sustainabilityUpgrade: 'Amélioration de la durabilité',
       hireStaff: 'Recruter du personnel',
+      other: 'Autre',
     },
     ruralAreaOptions: {
       yes: 'Oui',

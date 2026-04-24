@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import AppHeader from './components/AppHeader';
+import BrandBar from './components/BrandBar';
+import AgentOnboardingPanel from './components/AgentOnboardingPanel';
 import BusinessProfilePanel from './components/BusinessProfilePanel';
+import FloatingAssistant from './components/FloatingAssistant';
 import FundingMatchesPanel from './components/FundingMatchesPanel';
+import MockApplicationPanel from './components/MockApplicationPanel';
 import FooterNote from './components/FooterNote';
 import { generateAIRecommendations } from './aiHelper';
 import { defaultLanguage } from './i18n/translations';
@@ -19,14 +23,23 @@ const initialMetrics = {
 };
 
 function App() {
+  const [userMode, setUserMode] = useState('endUser');
   const [currentLanguage, setCurrentLanguage] = useState(defaultLanguage);
-  const [currentScreen, setCurrentScreen] = useState('form');
+  const [currentScreen, setCurrentScreen] = useState('agent');
+  const [agentPrefill, setAgentPrefill] = useState(null);
   const [submittedProfile, setSubmittedProfile] = useState(null);
   const [profileReview, setProfileReview] = useState(null);
   const [results, setResults] = useState([]);
   const [isGeneratingRecommendations, setIsGeneratingRecommendations] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState('');
   const [metrics, setMetrics] = useState(initialMetrics);
+  const [selectedMockRecommendation, setSelectedMockRecommendation] = useState(null);
+  const isDeveloperMode = userMode === 'developer';
+  const canShowMockApplication =
+    currentScreen === 'mockApplication' &&
+    submittedProfile !== null &&
+    profileReview !== null &&
+    (selectedMockRecommendation || results[0]);
 
   useEffect(() => {
     try {
@@ -65,14 +78,16 @@ function App() {
     });
   };
 
-  const handleFindFunding = async (profile) => {
+  const handleFindFunding = async (profile, options = {}) => {
     const candidatePrograms = fundingPrograms;
+    const { openMockApplication = false } = options;
 
     setCurrentLanguage(profile.preferredLanguage || defaultLanguage);
     setSubmittedProfile(profile);
     setProfileReview(null);
     setResults([]);
     setRecommendationsError('');
+    setSelectedMockRecommendation(null);
     setCurrentScreen('results');
 
     if (candidatePrograms.length === 0) {
@@ -89,6 +104,10 @@ function App() {
 
       if (aiResult.recommendations.length > 0) {
         updateMetrics('successfulSearches');
+        if (openMockApplication) {
+          setSelectedMockRecommendation(aiResult.recommendations[0]);
+          setCurrentScreen('mockApplication');
+        }
       }
     } catch (error) {
       setRecommendationsError(
@@ -124,13 +143,39 @@ function App() {
   };
 
   const handleStartOver = () => {
-    setCurrentScreen('form');
+    setCurrentScreen('agent');
     setCurrentLanguage(defaultLanguage);
+    setAgentPrefill(null);
     setSubmittedProfile(null);
     setProfileReview(null);
     setResults([]);
+    setSelectedMockRecommendation(null);
     setRecommendationsError('');
     setIsGeneratingRecommendations(false);
+  };
+
+  const handleOpenMockApplication = (recommendation) => {
+    if (!recommendation) {
+      return;
+    }
+
+    setSelectedMockRecommendation(recommendation);
+    setCurrentScreen('mockApplication');
+  };
+
+  const handleBackToResults = () => {
+    setCurrentScreen('results');
+  };
+
+  const handleAgentComplete = (prefill) => {
+    setAgentPrefill(prefill);
+    setCurrentLanguage(prefill?.preferredLanguage || defaultLanguage);
+    setCurrentScreen('form');
+  };
+
+  const handleSkipAgent = () => {
+    setAgentPrefill(null);
+    setCurrentScreen('form');
   };
 
   return (
@@ -139,17 +184,63 @@ function App() {
         Skip to main content
       </a>
       <div className="page-frame">
-        {currentScreen === 'form' ? (
+        <div className="mode-toggle-bar">
+          <span className="mode-toggle-label">View mode</span>
+          <div className="mode-toggle" role="tablist" aria-label="View mode">
+            <button
+              type="button"
+              className={`mode-toggle-button${!isDeveloperMode ? ' active' : ''}`}
+              onClick={() => setUserMode('endUser')}
+              aria-pressed={!isDeveloperMode}
+            >
+              End User
+            </button>
+            <button
+              type="button"
+              className={`mode-toggle-button${isDeveloperMode ? ' active' : ''}`}
+              onClick={() => setUserMode('developer')}
+              aria-pressed={isDeveloperMode}
+            >
+              Developer
+            </button>
+          </div>
+        </div>
+        {currentScreen === 'agent' ? (
+          <main id="main-content" className="agent-stage">
+            <div className="agent-preview" aria-hidden="true">
+              <AppHeader language={currentLanguage} />
+              <BusinessProfilePanel
+                language={currentLanguage}
+                onLanguageChange={setCurrentLanguage}
+                onSubmitProfile={handleFindFunding}
+                initialProfile={agentPrefill}
+                previewMode
+                isDeveloperMode={isDeveloperMode}
+              />
+            </div>
+            <div className="agent-overlay">
+              <AgentOnboardingPanel
+                language={currentLanguage}
+                onLanguageChange={setCurrentLanguage}
+                onComplete={handleAgentComplete}
+                onSkip={handleSkipAgent}
+              />
+            </div>
+          </main>
+        ) : currentScreen === 'form' ? (
           <main id="main-content" className="screen-layout">
             <AppHeader language={currentLanguage} />
             <BusinessProfilePanel
               language={currentLanguage}
               onLanguageChange={setCurrentLanguage}
               onSubmitProfile={handleFindFunding}
+              initialProfile={agentPrefill}
+              isDeveloperMode={isDeveloperMode}
             />
           </main>
-        ) : (
+        ) : currentScreen === 'results' ? (
           <main id="main-content" className="screen-layout">
+            <BrandBar language={currentLanguage} compact />
             <FundingMatchesPanel
               results={results}
               hasSubmitted={submittedProfile !== null}
@@ -160,15 +251,59 @@ function App() {
               submittedProfile={submittedProfile}
               profileReview={profileReview}
               metrics={metrics}
+              isDeveloperMode={isDeveloperMode}
               onApplicationClick={handleApplicationClick}
               onHelpfulVote={handleHelpfulVote}
               onResetMetrics={handleResetMetrics}
+              onOpenMockApplication={handleOpenMockApplication}
+              onStartOver={handleStartOver}
+            />
+          </main>
+        ) : canShowMockApplication ? (
+          <main id="main-content" className="screen-layout">
+            <BrandBar language={currentLanguage} compact />
+            <MockApplicationPanel
+              language={currentLanguage}
+              submittedProfile={submittedProfile}
+              profileReview={profileReview}
+              recommendation={selectedMockRecommendation || results[0]}
+              onBackToResults={handleBackToResults}
+              onStartOver={handleStartOver}
+            />
+          </main>
+        ) : (
+          <main id="main-content" className="screen-layout">
+            <BrandBar language={currentLanguage} compact />
+            <FundingMatchesPanel
+              results={results}
+              hasSubmitted={submittedProfile !== null}
+              isLoading={isGeneratingRecommendations}
+              errorMessage={recommendationsError}
+              language={currentLanguage}
+              businessName={submittedProfile?.businessName}
+              submittedProfile={submittedProfile}
+              profileReview={profileReview}
+              metrics={metrics}
+              isDeveloperMode={isDeveloperMode}
+              onApplicationClick={handleApplicationClick}
+              onHelpfulVote={handleHelpfulVote}
+              onResetMetrics={handleResetMetrics}
+              onOpenMockApplication={handleOpenMockApplication}
               onStartOver={handleStartOver}
             />
           </main>
         )}
 
         <FooterNote language={currentLanguage} />
+        {currentScreen !== 'agent' && (
+          <FloatingAssistant
+            language={currentLanguage}
+            currentScreen={currentScreen}
+            submittedProfile={submittedProfile}
+            profileReview={profileReview}
+            results={results}
+          />
+        )}
       </div>
     </div>
   );

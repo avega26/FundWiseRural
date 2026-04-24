@@ -1,5 +1,49 @@
+import { generateDraftApplicationSupport } from '../aiHelper';
+import { generalGrantOptions } from '../data/generalGrantOptions';
 import { getTranslation } from '../i18n/translations';
 import { useEffect, useState } from 'react';
+
+function FundTypeInfo({ fundType, copy }) {
+  const explanation = copy.fundTypeExplainers?.[fundType];
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <span className="fundtype-info">
+      <span>{fundType}</span>
+      {explanation && (
+        <>
+          <button
+            type="button"
+            className="fundtype-tooltip-trigger"
+            onClick={() => setIsOpen(true)}
+            aria-label={`${copy.learnMoreLabel || 'Learn more'} about ${fundType}`}
+            aria-expanded={isOpen}
+          >
+            {copy.learnMoreLabel || 'Learn more'}
+          </button>
+          {isOpen && (
+            <span className="fundtype-popup" role="dialog" aria-modal="false">
+              <span className="fundtype-popup-card">
+                <span className="fundtype-popup-header">
+                  <strong>{fundType}</strong>
+                  <button
+                    type="button"
+                    className="fundtype-popup-close"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close grant explanation"
+                  >
+                    ×
+                  </button>
+                </span>
+                <span className="fundtype-popup-body">{explanation}</span>
+              </span>
+            </span>
+          )}
+        </>
+      )}
+    </span>
+  );
+}
 
 function FundingMatchesPanel({
   results,
@@ -10,17 +54,30 @@ function FundingMatchesPanel({
   onApplicationClick,
   onHelpfulVote,
   onResetMetrics,
+  onOpenMockApplication,
   language,
   businessName,
   submittedProfile,
   profileReview,
   metrics,
+  isDeveloperMode = false,
 }) {
   const [showScoringInfo, setShowScoringInfo] = useState(false);
   const [showMetricsInfo, setShowMetricsInfo] = useState(false);
-  const [expandedCards, setExpandedCards] = useState({});
+  const [activeResultId, setActiveResultId] = useState(null);
+  const [draftSupportById, setDraftSupportById] = useState({});
+  const [helpfulVote, setHelpfulVote] = useState('');
   const copy = getTranslation(language);
+  const additionalGeneralGrants = generalGrantOptions.filter((grant) => {
+    const context = `${submittedProfile?.additionalContext || ''} ${submittedProfile?.otherMainGoal || ''}`.toLowerCase();
+    const matchesGoal = grant.fitRules.mainGoals.includes(submittedProfile?.mainGoal);
+    const matchesBusinessType = grant.fitRules.businessTypes.includes(submittedProfile?.businessType);
+    const matchesContext = grant.fitRules.contextSignals.some((signal) => context.includes(signal));
+
+    return matchesGoal || matchesBusinessType || matchesContext;
+  }).slice(0, 2);
   const showEmptyState = hasSubmitted && !isLoading && !errorMessage && results.length === 0;
+  const topMockApplicationCandidate = results[0]?.supportsMockApplication ? results[0] : null;
   const completionRate = metrics.pageVisits
     ? Math.round((metrics.successfulSearches / metrics.pageVisits) * 100)
     : 0;
@@ -34,20 +91,17 @@ function FundingMatchesPanel({
 
   useEffect(() => {
     if (!results.length) {
-      setExpandedCards({});
+      setActiveResultId(null);
+      setDraftSupportById({});
+      setHelpfulVote('');
       return;
     }
-
-    setExpandedCards((current) => {
-      const next = {};
-
-      results.forEach((item) => {
-        next[item.id] = current[item.id] ?? true;
-      });
-
-      return next;
-    });
   }, [results]);
+
+  const handleHelpfulClick = (vote) => {
+    setHelpfulVote(vote);
+    onHelpfulVote(vote);
+  };
 
   const handleDownloadResults = () => {
     if (!results.length) {
@@ -84,25 +138,29 @@ function FundingMatchesPanel({
         `${copy.programmeSummary}: ${item.routeSummary || '-'}`,
         `${copy.fitScore}: ${item.fitScore}/100`,
         `${copy.pointBreakdown}:`,
-        `- ${copy.businessTypeFit}: ${item.fitBreakdown.businessType}`,
-        `- ${copy.projectGoalFit}: ${item.fitBreakdown.projectGoal}`,
-        `- ${copy.ruralFit}: ${item.fitBreakdown.rural}`,
-        `- ${copy.sizeFit}: ${item.fitBreakdown.size}`,
-        `- ${copy.contextFit}: ${item.fitBreakdown.context}`,
-        `- ${copy.routeFit}: ${item.fitBreakdown.routeFit}`,
+        `- ${copy.businessTypeFit}: ${formatBreakdown('businessType', item.fitBreakdown.businessType)}`,
+        `- ${copy.projectGoalFit}: ${formatBreakdown('projectGoal', item.fitBreakdown.projectGoal)}`,
+        `- ${copy.ruralFit}: ${formatBreakdown('rural', item.fitBreakdown.rural)}`,
+        `- ${copy.sizeFit}: ${formatBreakdown('size', item.fitBreakdown.size)}`,
+        `- ${copy.contextFit}: ${formatBreakdown('context', item.fitBreakdown.context)}`,
+        `- ${copy.routeFit}: ${formatBreakdown('routeFit', item.fitBreakdown.routeFit)}`,
         `${copy.fitReason}: ${item.explanation}`,
         `${copy.nextStep} ${item.nextStep}`,
-        `${copy.draftSupport}:`,
-        `- ${copy.projectSummary}: ${item.draftSupport.projectSummary}`,
-        `- ${copy.fitReason}: ${item.draftSupport.fitReason}`,
-        `- ${copy.applicationAngle}: ${item.draftSupport.applicationAngle}`,
-        `- ${copy.evidenceToPrepare}:`,
-        ...(item.draftSupport.evidenceToPrepare || []).map((entry) => `  * ${entry}`),
-        `- ${copy.preSubmissionChecklist}:`,
-        ...(item.draftSupport.preSubmissionChecklist || []).map((entry) => `  * ${entry}`),
-        `- ${copy.firstAuthorityQuestion}: ${item.draftSupport.firstAuthorityQuestion}`,
-        `- ${copy.clarificationPoint}: ${item.draftSupport.clarificationPoint}`,
-        `- ${copy.verifyBeforeSubmit}: ${item.draftSupport.verifyBeforeSubmit}`,
+        ...(draftSupportById[item.id]
+          ? [
+              `${copy.draftSupport}:`,
+              `- ${copy.projectSummary}: ${draftSupportById[item.id].projectSummary}`,
+              `- ${copy.fitReason}: ${draftSupportById[item.id].fitReason}`,
+              `- ${copy.applicationAngle}: ${draftSupportById[item.id].applicationAngle}`,
+              `- ${copy.evidenceToPrepare}:`,
+              ...(draftSupportById[item.id].evidenceToPrepare || []).map((entry) => `  * ${entry}`),
+              `- ${copy.preSubmissionChecklist}:`,
+              ...(draftSupportById[item.id].preSubmissionChecklist || []).map((entry) => `  * ${entry}`),
+              `- ${copy.firstAuthorityQuestion}: ${draftSupportById[item.id].firstAuthorityQuestion}`,
+              `- ${copy.clarificationPoint}: ${draftSupportById[item.id].clarificationPoint}`,
+              `- ${copy.verifyBeforeSubmit}: ${draftSupportById[item.id].verifyBeforeSubmit}`,
+            ]
+          : []),
         `${copy.programme}: ${item.routeDetails.programme}`,
         `${copy.country}: ${item.routeDetails.country}`,
         `${copy.region}: ${item.routeDetails.region}`,
@@ -130,11 +188,117 @@ function FundingMatchesPanel({
     URL.revokeObjectURL(url);
   };
 
-  const toggleCard = (cardId) => {
-    setExpandedCards((current) => ({
-      ...current,
-      [cardId]: !current[cardId],
-    }));
+  const openResultDetail = (cardId) => {
+    setActiveResultId(cardId);
+  };
+
+  const closeResultDetail = () => {
+    setActiveResultId(null);
+  };
+
+  const handleGenerateDraftSupport = (item) => {
+    setDraftSupportById((current) => {
+      if (current[item.id]) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [item.id]: generateDraftApplicationSupport(submittedProfile, item, profileReview),
+      };
+    });
+  };
+
+  const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
+  const hasList = (value) => Array.isArray(value) && value.some((entry) => hasText(entry));
+  const breakdownMax = {
+    businessType: 4,
+    projectGoal: 4,
+    rural: 3,
+    size: 2,
+    context: 3,
+    routeFit: 3,
+  };
+  const formatBreakdown = (key, value) => `${value}/${breakdownMax[key]}`;
+  const activeResult = results.find((item) => item.id === activeResultId) || null;
+  const activeDraftSupport = activeResult ? draftSupportById[activeResult.id] : null;
+  const renderDraftSupport = (item, draftSupport) => {
+    if (
+      !(hasText(draftSupport?.projectSummary) ||
+      hasText(draftSupport?.fitReason) ||
+      hasText(draftSupport?.applicationAngle) ||
+      hasList(draftSupport?.evidenceToPrepare) ||
+      hasList(draftSupport?.preSubmissionChecklist) ||
+      hasText(draftSupport?.firstAuthorityQuestion) ||
+      hasText(draftSupport?.clarificationPoint) ||
+      hasText(draftSupport?.verifyBeforeSubmit))
+    ) {
+      return null;
+    }
+
+    return (
+      <div className="draft-support">
+        <h4>{copy.draftSupport}</h4>
+        <div className="draft-support-grid">
+          {hasText(draftSupport?.projectSummary) && (
+            <div className="draft-support-item">
+              <strong>{copy.projectSummary}</strong>
+              <p>{draftSupport.projectSummary}</p>
+            </div>
+          )}
+          {hasText(draftSupport?.fitReason) && (
+            <div className="draft-support-item">
+              <strong>{copy.fitReason}</strong>
+              <p>{draftSupport.fitReason}</p>
+            </div>
+          )}
+          {hasText(draftSupport?.applicationAngle) && (
+            <div className="draft-support-item">
+              <strong>{copy.applicationAngle}</strong>
+              <p>{draftSupport.applicationAngle}</p>
+            </div>
+          )}
+          {hasList(draftSupport?.evidenceToPrepare) && (
+            <div className="draft-support-item">
+              <strong>{copy.evidenceToPrepare}</strong>
+              <ul className="draft-support-list">
+                {draftSupport.evidenceToPrepare.filter((entry) => hasText(entry)).map((entry, index) => (
+                  <li key={index}>{entry}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hasList(draftSupport?.preSubmissionChecklist) && (
+            <div className="draft-support-item">
+              <strong>{copy.preSubmissionChecklist}</strong>
+              <ul className="draft-support-list">
+                {draftSupport.preSubmissionChecklist.filter((entry) => hasText(entry)).map((entry, index) => (
+                  <li key={index}>{entry}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hasText(draftSupport?.firstAuthorityQuestion) && (
+            <div className="draft-support-item">
+              <strong>{copy.firstAuthorityQuestion}</strong>
+              <p>{draftSupport.firstAuthorityQuestion}</p>
+            </div>
+          )}
+          {hasText(draftSupport?.clarificationPoint) && (
+            <div className="draft-support-item">
+              <strong>{copy.clarificationPoint}</strong>
+              <p>{draftSupport.clarificationPoint}</p>
+            </div>
+          )}
+          {hasText(draftSupport?.verifyBeforeSubmit) && (
+            <div className="draft-support-item">
+              <strong>{copy.verifyBeforeSubmit}</strong>
+              <p>{draftSupport.verifyBeforeSubmit}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -146,7 +310,7 @@ function FundingMatchesPanel({
           <p className="panel-copy">{copy.resultsDescription}</p>
         </div>
         <div className="results-header-actions">
-          {results.length > 0 && (
+          {isDeveloperMode && results.length > 0 && (
             <button
               type="button"
               className="secondary-button secondary-button-quiet"
@@ -189,7 +353,7 @@ function FundingMatchesPanel({
 
       {!isLoading && !errorMessage && results.length > 0 && (
         <div className="results-dashboard">
-          {showMetricsInfo && (
+          {isDeveloperMode && showMetricsInfo && (
             <div id="metrics-panel" className="metrics-card">
               <div className="metrics-card-header">
                 <h3>{copy.metricsTitle}</h3>
@@ -303,13 +467,17 @@ function FundingMatchesPanel({
                   </div>
                   <div className="reasoning-item reasoning-item-full">
                     <strong>{copy.detectedSignals}</strong>
-                    <div className="signal-list">
-                      {(profileReview.detectedSignals || []).map((signal) => (
-                        <span key={signal} className="signal-chip">
-                          {signal}
-                        </span>
-                      ))}
-                    </div>
+                    {hasList(profileReview.detectedSignals) && (
+                      <div className="signal-list">
+                        {profileReview.detectedSignals
+                          .filter((signal) => hasText(signal))
+                          .map((signal) => (
+                            <span key={signal} className="signal-chip">
+                              {signal}
+                            </span>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -368,25 +536,15 @@ function FundingMatchesPanel({
               >
                 {copy.downloadResults}
               </button>
-            </div>
-            <div className="helpful-card" role="group" aria-label={copy.helpfulQuestion}>
-              <p>{copy.helpfulQuestion}</p>
-              <div className="helpful-actions">
+              {topMockApplicationCandidate && (
                 <button
                   type="button"
-                  className="secondary-button secondary-button-quiet"
-                  onClick={() => onHelpfulVote('yes')}
+                  className="official-link summary-action-btn action-button"
+                  onClick={() => onOpenMockApplication?.(topMockApplicationCandidate)}
                 >
-                  {copy.helpfulYes}
+                  {copy.openMockApplication || 'Start mock application form'}
                 </button>
-                <button
-                  type="button"
-                  className="secondary-button secondary-button-quiet"
-                  onClick={() => onHelpfulVote('no')}
-                >
-                  {copy.helpfulNo}
-                </button>
-              </div>
+              )}
             </div>
             <p className="results-disclaimer">{copy.aiDisclaimer}</p>
           </div>
@@ -397,170 +555,227 @@ function FundingMatchesPanel({
                 key={item.id}
                 className={`fund-card ${index === 0 ? 'fund-card-featured' : ''}`}
               >
-                <button
-                  type="button"
-                  className="fund-card-toggle"
-                  onClick={() => toggleCard(item.id)}
-                  aria-expanded={expandedCards[item.id] ? 'true' : 'false'}
-                  aria-controls={`fund-card-panel-${item.id}`}
-                >
-                  <div className="fund-card-top">
-                    <div className="fund-card-title-group">
-                      {index === 0 && <span className="top-match-chip">{copy.topMatch}</span>}
-                      <h3>{item.name}</h3>
-                    </div>
-                    <div className="fund-card-badges">
-                      <span className={`badge ${item.fundType.toLowerCase()}`}>
-                        {item.fundType}
-                      </span>
-                      <span className={`eligibility ${item.eligibility.toLowerCase()}`}>
-                        {copy.eligibility[item.eligibility]}
-                      </span>
-                      <span className="card-chevron" aria-hidden="true">
-                        {expandedCards[item.id] ? '−' : '+'}
-                      </span>
-                    </div>
+                <div className="fund-card-top">
+                  <div className="fund-card-title-group">
+                    {index === 0 && <span className="top-match-chip">{copy.topMatch}</span>}
+                    <h3>{item.name}</h3>
                   </div>
-                </button>
+                  <div className="fund-card-badges">
+                    <span className={`badge ${item.fundType.toLowerCase()}`}>
+                      <FundTypeInfo fundType={item.fundType} copy={copy} />
+                    </span>
+                    <span className={`eligibility ${item.eligibility.toLowerCase()}`}>
+                      {copy.eligibility[item.eligibility]}
+                    </span>
+                  </div>
+                </div>
 
-                {expandedCards[item.id] && (
-                  <div id={`fund-card-panel-${item.id}`} className="fund-card-panel">
-                    {item.routeSummary && (
-                      <div className="programme-summary">
-                        <strong>{copy.programmeSummary}</strong>
-                        <p>{item.routeSummary}</p>
-                      </div>
-                    )}
+                {item.routeSummary && (
+                  <p className="result-card-summary">{item.routeSummary}</p>
+                )}
 
-                    <div className="fit-score-card">
-                      <div className="fit-score-header">
-                        <strong>{copy.fitScore}</strong>
-                        <span>{item.fitScore}/100</span>
+                <div className="fit-score-compact">
+                  <strong>{copy.fitScore}</strong>
+                  <span>{item.fitScore}/100</span>
+                </div>
+
+                <p className="match-description compact-match-description">{item.explanation}</p>
+
+                <div className="card-actions">
+                  <button
+                    type="button"
+                    className="secondary-button secondary-button-quiet"
+                    onClick={() => openResultDetail(item.id)}
+                  >
+                    {copy.showFullResult || 'Show full result'}
+                  </button>
+                  <a
+                    className="external-link-btn"
+                    href={item.applicationPage}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={onApplicationClick}
+                  >
+                    {copy.openProgrammePage(item.fundType)}
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {additionalGeneralGrants.length > 0 && (
+            <div className="general-grants-card">
+              <div className="profile-review-header">
+                <h3>{copy.generalGrantTitle || 'EU-wide opportunities'}</h3>
+              </div>
+              <p className="panel-copy">
+                {copy.generalGrantDescription ||
+                  'These are broader EU-wide programmes that may also be worth exploring alongside the main regional match.'}
+              </p>
+              <div className="general-grants-grid">
+                {additionalGeneralGrants.map((grant) => (
+                  <article key={grant.id} className="general-grant-item">
+                    <div className="fund-card-top">
+                      <div className="fund-card-title-group">
+                        <h4>{grant.title}</h4>
                       </div>
-                      <div className="fit-score-bar">
-                        <div
-                          className="fit-score-fill"
-                          style={{ width: `${item.fitScore}%` }}
-                        />
-                      </div>
-                      <div className="fit-breakdown">
-                        <p><strong>{copy.pointBreakdown}</strong></p>
-                        <p>{copy.businessTypeFit}: {item.fitBreakdown.businessType}</p>
-                        <p>{copy.projectGoalFit}: {item.fitBreakdown.projectGoal}</p>
-                        <p>{copy.ruralFit}: {item.fitBreakdown.rural}</p>
-                        <p>{copy.sizeFit}: {item.fitBreakdown.size}</p>
-                        <p>{copy.contextFit}: {item.fitBreakdown.context}</p>
-                        <p>{copy.routeFit}: {item.fitBreakdown.routeFit}</p>
-                      </div>
+                      <span className="badge general-badge">{grant.shortType}</span>
                     </div>
-
-                    <p className="match-description">{item.explanation}</p>
-
-                    {item.rankingReason && (
-                      <p className="ranking-reason">{item.rankingReason}</p>
-                    )}
-
-                    <div className="route-details">
-                      <h4>{copy.routeDetails}</h4>
-                      <div className="route-details-grid">
-                        <p>
-                          <strong>{copy.programme}</strong> {item.routeDetails.programme}
-                        </p>
-                        <p>
-                          <strong>{copy.country}</strong> {item.routeDetails.country}
-                        </p>
-                        <p>
-                          <strong>{copy.region}</strong> {item.routeDetails.region}
-                        </p>
-                        <p>
-                          <strong>{copy.authority}</strong> {item.routeDetails.authority}
-                        </p>
-                      </div>
-                      <p className="route-checked-note">{copy.reviewedLinkLabel}</p>
-                    </div>
-
-                    <div className="timeline-card">
-                      <h4>{copy.estimatedTimeline}</h4>
-                      <div className="timeline-list">
-                        <p>{item.estimatedTimeline.prep}</p>
-                        <p>{item.estimatedTimeline.submit}</p>
-                        <p>{item.estimatedTimeline.review}</p>
-                      </div>
-                    </div>
-
-                    <p className="next-step">
-                      <strong>{copy.nextStep}</strong> {item.nextStep}
-                    </p>
-
-                    <div className="draft-support">
-                      <h4>{copy.draftSupport}</h4>
-                      <div className="draft-support-grid">
-                        <div className="draft-support-item">
-                          <strong>{copy.projectSummary}</strong>
-                          <p>{item.draftSupport.projectSummary}</p>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.fitReason}</strong>
-                          <p>{item.draftSupport.fitReason}</p>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.applicationAngle}</strong>
-                          <p>{item.draftSupport.applicationAngle}</p>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.evidenceToPrepare}</strong>
-                          <ul className="draft-support-list">
-                            {(item.draftSupport.evidenceToPrepare || []).map((entry, index) => (
-                              <li key={index}>{entry}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.preSubmissionChecklist}</strong>
-                          <ul className="draft-support-list">
-                            {(item.draftSupport.preSubmissionChecklist || []).map((entry, index) => (
-                              <li key={index}>{entry}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.firstAuthorityQuestion}</strong>
-                          <p>{item.draftSupport.firstAuthorityQuestion}</p>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.clarificationPoint}</strong>
-                          <p>{item.draftSupport.clarificationPoint}</p>
-                        </div>
-                        <div className="draft-support-item">
-                          <strong>{copy.verifyBeforeSubmit}</strong>
-                          <p>{item.draftSupport.verifyBeforeSubmit}</p>
-                        </div>
-                      </div>
-                    </div>
-
+                    <p>{grant.summary}</p>
                     <div className="card-actions">
                       <a
                         className="external-link-btn"
-                        href={item.applicationPage}
+                        href={grant.applicationPage}
                         target="_blank"
                         rel="noreferrer"
                         onClick={onApplicationClick}
                       >
-                        {copy.openProgrammePage(item.fundType)}
+                        {copy.openGeneralGrant || 'Open grant info'}
                       </a>
                       <a
                         className="official-link"
-                        href={item.officialPage}
+                        href={grant.officialPage}
                         target="_blank"
                         rel="noreferrer"
                       >
                         {copy.openOfficialInfo}
                       </a>
                     </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeResult && (
+            <div className="result-overlay" role="dialog" aria-modal="true" aria-labelledby={`result-overlay-title-${activeResult.id}`}>
+              <div className="result-overlay-backdrop" onClick={closeResultDetail} />
+              <div className="result-overlay-panel">
+                <div className="result-overlay-header">
+                  <div>
+                    <p className="summary-kicker">{copy.topMatch}</p>
+                    <h3 id={`result-overlay-title-${activeResult.id}`}>{activeResult.name}</h3>
                   </div>
-                )}
-              </article>
-            ))}
+                  <button type="button" className="secondary-button secondary-button-quiet" onClick={closeResultDetail}>
+                    {copy.backToResults || 'Back to results'}
+                  </button>
+                </div>
+
+                <div className="fund-card-panel">
+                  <div className="fit-score-card">
+                    <div className="fit-score-header">
+                      <strong>{copy.fitScore}</strong>
+                      <span>{activeResult.fitScore}/100</span>
+                    </div>
+                    <div className="fit-score-bar">
+                      <div className="fit-score-fill" style={{ width: `${activeResult.fitScore}%` }} />
+                    </div>
+                    <div className="fit-breakdown">
+                      <p><strong>{copy.pointBreakdown}</strong></p>
+                      <p>{copy.businessTypeFit}: {formatBreakdown('businessType', activeResult.fitBreakdown.businessType)}</p>
+                      <p>{copy.projectGoalFit}: {formatBreakdown('projectGoal', activeResult.fitBreakdown.projectGoal)}</p>
+                      <p>{copy.ruralFit}: {formatBreakdown('rural', activeResult.fitBreakdown.rural)}</p>
+                      <p>{copy.sizeFit}: {formatBreakdown('size', activeResult.fitBreakdown.size)}</p>
+                      <p>{copy.contextFit}: {formatBreakdown('context', activeResult.fitBreakdown.context)}</p>
+                      <p>{copy.routeFit}: {formatBreakdown('routeFit', activeResult.fitBreakdown.routeFit)}</p>
+                    </div>
+                  </div>
+
+                  <p className="match-description">{activeResult.explanation}</p>
+                  {activeResult.rankingReason && <p className="ranking-reason">{activeResult.rankingReason}</p>}
+
+                  <div className="route-details">
+                    <h4>{copy.routeDetails}</h4>
+                    <div className="route-details-grid">
+                      <p><strong>{copy.programme}</strong> {activeResult.routeDetails.programme}</p>
+                      <p><strong>{copy.country}</strong> {activeResult.routeDetails.country}</p>
+                      <p><strong>{copy.region}</strong> {activeResult.routeDetails.region}</p>
+                      <p><strong>{copy.authority}</strong> {activeResult.routeDetails.authority}</p>
+                    </div>
+                    <p className="route-checked-note">{copy.reviewedLinkLabel}</p>
+                  </div>
+
+                  {(hasText(activeResult.estimatedTimeline?.prep) ||
+                    hasText(activeResult.estimatedTimeline?.submit) ||
+                    hasText(activeResult.estimatedTimeline?.review)) && (
+                    <div className="timeline-card">
+                      <h4>{copy.estimatedTimeline}</h4>
+                      <div className="timeline-list">
+                        {hasText(activeResult.estimatedTimeline?.prep) && <p>{activeResult.estimatedTimeline.prep}</p>}
+                        {hasText(activeResult.estimatedTimeline?.submit) && <p>{activeResult.estimatedTimeline.submit}</p>}
+                        {hasText(activeResult.estimatedTimeline?.review) && <p>{activeResult.estimatedTimeline.review}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {hasText(activeResult.nextStep) && (
+                    <p className="next-step">
+                      <strong>{copy.nextStep}</strong> {activeResult.nextStep}
+                    </p>
+                  )}
+
+                  {activeDraftSupport ? (
+                    renderDraftSupport(activeResult, activeDraftSupport)
+                  ) : (
+                    <div className="draft-support draft-support-prompt">
+                      <h4>{copy.draftSupport}</h4>
+                      <p>{copy.draftSupportPrompt || 'Generate this section only if you want a fuller application-preparation draft for this route.'}</p>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => handleGenerateDraftSupport(activeResult)}
+                      >
+                        {copy.generateDraftSupport || 'Generate draft application support'}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="card-actions">
+                    <a
+                      className="external-link-btn"
+                      href={activeResult.applicationPage}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={onApplicationClick}
+                    >
+                      {copy.openProgrammePage(activeResult.fundType)}
+                    </a>
+                    <a className="official-link" href={activeResult.officialPage} target="_blank" rel="noreferrer">
+                      {copy.openOfficialInfo}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="helpful-card helpful-card-bottom" role="group" aria-label={copy.helpfulQuestion}>
+            <p>{copy.helpfulQuestion}</p>
+            <div className="helpful-actions">
+              <button
+                type="button"
+                className="secondary-button secondary-button-quiet"
+                onClick={() => handleHelpfulClick('yes')}
+                aria-pressed={helpfulVote === 'yes'}
+                disabled={helpfulVote !== ''}
+              >
+                {copy.helpfulYes}
+              </button>
+              <button
+                type="button"
+                className="secondary-button secondary-button-quiet"
+                onClick={() => handleHelpfulClick('no')}
+                aria-pressed={helpfulVote === 'no'}
+                disabled={helpfulVote !== ''}
+              >
+                {copy.helpfulNo}
+              </button>
+            </div>
+            {helpfulVote && (
+              <p className="helpful-confirmation" aria-live="polite">
+                {helpfulVote === 'yes' ? copy.helpfulThanksYes : copy.helpfulThanksNo}
+              </p>
+            )}
           </div>
         </div>
       )}
