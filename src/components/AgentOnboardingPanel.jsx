@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { askFundwiseAssistant } from '../aiHelper';
 import { countryOptions, defaultLanguage, getTranslation, regionsByCountry } from '../i18n/translations';
 
 const agentQuestions = [
@@ -24,6 +25,16 @@ const initialDraft = {
   specialTags: [],
   grantScopePreference: '',
 };
+
+function TypingDots() {
+  return (
+    <span className="typing-dots" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
 
 function normalizeComparable(value = '') {
   return value
@@ -242,7 +253,7 @@ function getFriendlyAck(questionIndex, nextDraft, answer, copy) {
         : `Cute, I’m already getting ${typeLabel} energy from that business description.`;
     }
 
-    return 'That gives me a helpful starting picture, even if Clover still has a few detective notes to gather.';
+    return 'That gives me a helpful starting picture, even if Seraphina still has a few detective notes to gather.';
   }
 
   if (questionIndex === 1) {
@@ -316,7 +327,7 @@ function getSideQuestionResponse(answer, currentQuestionIndex) {
   const normalizedAnswer = normalizeComparable(answer);
 
   if (/who are you|what are you|what do you do/.test(normalizedAnswer)) {
-    return `I’m Clover, the FundWise guide. Think of me as a grant-savvy grey cat with decent manners and a job to make this form less annoying. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
+    return `I’m Seraphina, the FundWise guide. Think of me as a grant-savvy grey cat with decent manners and a job to make this form less annoying. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
   }
 
   if (/how does this work|what does this do|why are you asking/.test(normalizedAnswer)) {
@@ -350,6 +361,38 @@ function getSideQuestionResponse(answer, currentQuestionIndex) {
   return '';
 }
 
+function buildAgentPrompt({
+  answer,
+  currentQuestionIndex,
+  nextQuestionIndex,
+  nextDraft,
+  shouldComplete,
+}) {
+  const nextQuestion = agentQuestions[nextQuestionIndex] || '';
+
+  return [
+    'ONBOARDING MODE: true',
+    `USER ANSWER: ${answer}`,
+    `CURRENT QUESTION: ${agentQuestions[currentQuestionIndex]}`,
+    `NEXT QUESTION: ${nextQuestion}`,
+    `SHOULD COMPLETE: ${shouldComplete ? 'yes' : 'no'}`,
+    `INFERRED PROFILE: ${JSON.stringify({
+      businessName: nextDraft.businessName,
+      businessType: nextDraft.businessType,
+      agricultureSubType: nextDraft.agricultureSubType,
+      country: nextDraft.country,
+      region: nextDraft.region,
+      businessSize: nextDraft.businessSize,
+      yearsInOperation: nextDraft.yearsInOperation,
+      ruralArea: nextDraft.ruralArea,
+      mainGoal: nextDraft.mainGoal,
+      otherMainGoal: nextDraft.otherMainGoal,
+      specialTags: nextDraft.specialTags,
+      grantScopePreference: nextDraft.grantScopePreference,
+    })}`,
+  ].join('\n');
+}
+
 function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }) {
   const copy = getTranslation(language);
   const [draft, setDraft] = useState({
@@ -359,12 +402,14 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: `Hi! I’m Clover, your FundWise guide. ${agentQuestions[0]}`,
+      text: `Hi! I’m Seraphina, your FundWise guide. ${agentQuestions[0]}`,
     },
   ]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [isComplete, setIsComplete] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
     onLanguageChange?.(language || defaultLanguage);
@@ -382,23 +427,49 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
     return () => window.clearTimeout(timeoutId);
   }, [draft, isComplete, onComplete]);
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, isTyping]);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const trimmed = inputValue.trim();
-    if (!trimmed || isComplete) {
+    if (!trimmed || isComplete || isTyping) {
       return;
     }
 
     const sideQuestionResponse = getSideQuestionResponse(trimmed, currentQuestionIndex);
 
     if (sideQuestionResponse) {
-      setMessages((current) => [
-        ...current,
-        { role: 'user', text: trimmed },
-        { role: 'assistant', text: sideQuestionResponse },
-      ]);
+      setMessages((current) => [...current, { role: 'user', text: trimmed }]);
       setInputValue('');
+      setIsTyping(true);
+      try {
+        const response = await askFundwiseAssistant({
+          question: [
+            'ONBOARDING MODE: true',
+            `USER ANSWER: ${trimmed}`,
+            `CURRENT QUESTION: ${agentQuestions[currentQuestionIndex]}`,
+            'SIDE QUESTION: yes',
+            `GUIDE THE USER BACK TO: ${agentQuestions[currentQuestionIndex]}`,
+          ].join('\n'),
+          language,
+          submittedProfile: draft,
+          profileReview: null,
+          results: [],
+          currentScreen: 'agent',
+        });
+
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', text: response.answer || sideQuestionResponse },
+        ]);
+      } catch {
+        setMessages((current) => [...current, { role: 'assistant', text: sideQuestionResponse }]);
+      } finally {
+        setIsTyping(false);
+      }
       return;
     }
 
@@ -459,36 +530,90 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
     if (shouldComplete || (currentQuestionIndex === 3 && nextSatisfied)) {
       const summaryParts = buildSummaryParts(nextDraft, copy);
       const friendlyAck = getFriendlyAck(currentQuestionIndex, nextDraft, trimmed, copy);
-      nextMessages.push({
-        role: 'assistant',
-        text: summaryParts.length
-          ? `${friendlyAck} I’ve prefilled ${summaryParts.join(', ')} and I’m opening the full form so you can review everything before I get too confident.`
-          : `${friendlyAck} I have enough to start the full intake form, so I’m opening it with a few prefills.`,
-      });
+      const fallbackFinalReply = summaryParts.length
+        ? `${friendlyAck} I’ve prefilled ${summaryParts.join(', ')} and I’m opening the full form so you can review everything before I get too confident.`
+        : `${friendlyAck} I have enough to start the full intake form, so I’m opening it with a few prefills.`;
       setMessages(nextMessages);
       setInputValue('');
-      setIsComplete(true);
+      setIsTyping(true);
+      try {
+        const response = await askFundwiseAssistant({
+          question: buildAgentPrompt({
+            answer: trimmed,
+            currentQuestionIndex,
+            nextQuestionIndex: currentQuestionIndex,
+            nextDraft,
+            shouldComplete: true,
+          }),
+          language,
+          submittedProfile: nextDraft,
+          profileReview: null,
+          results: [],
+          currentScreen: 'agent',
+        });
+
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', text: response.answer || fallbackFinalReply },
+        ]);
+      } catch {
+        setMessages((current) => [...current, { role: 'assistant', text: fallbackFinalReply }]);
+      } finally {
+        setIsTyping(false);
+        setIsComplete(true);
+      }
       return;
     }
 
     const nextQuestionIndex = currentQuestionIndex + 1;
     const friendlyAck = getFriendlyAck(currentQuestionIndex, nextDraft, trimmed, copy);
     const nextLead = getNextQuestionLead(nextQuestionIndex, nextDraft);
-    nextMessages.push({
-      role: 'assistant',
-      text: [friendlyAck, nextLead, agentQuestions[nextQuestionIndex]].filter(Boolean).join(' '),
-    });
-
+    const fallbackReply = [friendlyAck, nextLead, agentQuestions[nextQuestionIndex]].filter(Boolean).join(' ');
     setMessages(nextMessages);
     setCurrentQuestionIndex(nextQuestionIndex);
     setInputValue('');
+    setIsTyping(true);
+    try {
+      const response = await askFundwiseAssistant({
+        question: buildAgentPrompt({
+          answer: trimmed,
+          currentQuestionIndex,
+          nextQuestionIndex,
+          nextDraft,
+          shouldComplete: false,
+        }),
+        language,
+        submittedProfile: nextDraft,
+        profileReview: null,
+        results: [],
+        currentScreen: 'agent',
+      });
+
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          text: response.answer || fallbackReply,
+        },
+      ]);
+    } catch {
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          text: fallbackReply,
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
 
-      if (inputValue.trim() && !isComplete) {
+      if (inputValue.trim() && !isComplete && !isTyping) {
         handleSubmit(event);
       }
     }
@@ -502,28 +627,28 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             <svg viewBox="0 0 120 120" className="agent-bot-svg">
               <defs>
                 <linearGradient id="cloverFrame" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f7fafc" />
-                  <stop offset="100%" stopColor="#e8eef3" />
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#edf2f7" />
                 </linearGradient>
               </defs>
               <circle cx="60" cy="60" r="51" fill="url(#cloverFrame)" stroke="#d9e8f2" strokeWidth="3" />
               <path d="M29 98c8-18 22-27 31-27s23 9 31 27" fill="#d8ebf8" />
-              <path d="M35 98c6-12 15-19 25-19s19 7 25 19" fill="#d9dfe6" opacity="0.98" />
-              <circle cx="60" cy="49" r="24" fill="#f2f5f8" stroke="#b8c3ce" strokeWidth="3" />
-              <path d="M47 57l-12 3" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M47 61l-13 0" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M73 57l12 3" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M73 61l13 0" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M37 37c0-10 8-18 18-18 2 0 5 0 7 1-7 2-13 8-13 17H37Z" fill="#eef2f6" stroke="#b8c3ce" strokeWidth="3" />
-              <path d="M83 37c0-10-8-18-18-18-2 0-5 0-7 1 7 2 13 8 13 17h12Z" fill="#eef2f6" stroke="#b8c3ce" strokeWidth="3" />
-              <path d="M68 22l11-8 9 11-11 8Z" fill="#9aa6b2" />
-              <circle cx="77" cy="23" r="4" fill="#ffd55c" />
-              <circle cx="50" cy="48" r="3.8" fill="#163b57" />
-              <circle cx="70" cy="48" r="3.8" fill="#163b57" />
-              <ellipse cx="60" cy="56" rx="6.5" ry="4.4" fill="#f5c9d1" />
-              <path d="M54 63c2 2 10 2 12 0" fill="none" stroke="#7f8b98" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="45" cy="58" r="5.5" fill="#e4e8ed" />
-              <circle cx="75" cy="58" r="5.5" fill="#e4e8ed" />
+              <path d="M40 40 49 21 62 36" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M80 40 71 21 58 36" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" strokeLinejoin="round" />
+              <circle cx="60" cy="50" r="27" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" />
+              <ellipse cx="50" cy="49" rx="3" ry="3.8" fill="#1c3348" />
+              <ellipse cx="70" cy="49" rx="3" ry="3.8" fill="#1c3348" />
+              <ellipse cx="60" cy="59" rx="4.4" ry="3.5" fill="#f3c548" />
+              <circle cx="45" cy="57" r="4.6" fill="#f4dbe2" opacity="0.82" />
+              <circle cx="75" cy="57" r="4.6" fill="#f4dbe2" opacity="0.82" />
+              <path d="M51 58l-15-2" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M51 64H35" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M69 58l15-2" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M69 64h15" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M55 66c1.8 2.1 7.2 2.1 10 0" fill="none" stroke="#7f8b98" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M73 74c0 6-6 11-13 11s-13-5-13-11" fill="#ffffff" opacity="0.78" />
+              <circle cx="60" cy="78" r="5.2" fill="#6b8ea6" />
+              <circle cx="60" cy="78" r="1.8" fill="#ffffff" />
               <path d="M43 83c5-5 11-8 17-8s12 3 17 8" fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
               <circle cx="96" cy="88" r="9" fill="#ffffff" stroke="#d9e8f2" strokeWidth="2" />
               <path d="M96 84v8M92 88h8" stroke="#4b9bc9" strokeWidth="2.5" strokeLinecap="round" />
@@ -531,9 +656,9 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
           </div>
           <div>
             <p className="eyebrow">AI Guide</p>
-            <h2 id="agent-title">Meet Clover</h2>
+            <h2 id="agent-title">Meet Seraphina</h2>
             <p className="panel-copy">
-              Clover floats above the full intake, asks a few quick setup questions, and then hands you into the full form with smart prefills already waiting.
+              Seraphina floats above the full intake, asks a few quick setup questions, and then hands you into the full form with smart prefills already waiting.
             </p>
           </div>
         </div>
@@ -547,6 +672,12 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
               <p>{message.text}</p>
             </div>
           ))}
+          {isTyping && (
+            <div className="agent-message agent-message-assistant">
+              <p><TypingDots /></p>
+            </div>
+          )}
+          <div ref={chatEndRef} />
         </div>
 
         <form className="agent-input-row" onSubmit={handleSubmit}>
@@ -560,19 +691,26 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             onChange={(event) => setInputValue(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your reply here..."
-            disabled={isComplete}
+            disabled={isComplete || isTyping}
           />
-          <button type="submit" className="primary-button" disabled={isComplete}>
-            {isComplete ? 'Opening form…' : 'Send'}
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={onSkip}
-            disabled={isComplete}
-          >
-            Skip to full form
-          </button>
+          <div className="agent-input-actions">
+            <p className="agent-input-hint">
+              {isTyping ? 'Seraphina is replying…' : 'Press Enter to send, or Shift+Enter for a new line.'}
+            </p>
+            <div className="agent-input-buttons">
+              <button type="submit" className="primary-button" disabled={isComplete || isTyping}>
+                {isComplete ? 'Opening form…' : isTyping ? 'Thinking…' : 'Send'}
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={onSkip}
+                disabled={isComplete || isTyping}
+              >
+                Skip to full form
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </section>

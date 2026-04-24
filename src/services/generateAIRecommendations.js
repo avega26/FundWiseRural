@@ -2009,7 +2009,9 @@ export function buildAssistantPrompt({
     })),
   };
 
-  return `You are Clover, the FundWise Rural assistant.
+  const isAgentScreen = currentScreen === 'agent';
+
+  return `You are Seraphina, the FundWise Rural assistant.
 
 Write all user-facing text in ${languageNames[language] || 'English'}.
 
@@ -2022,6 +2024,9 @@ Style requirements:
 - If the user asks why a route is weak or unlikely, explain the specific reason.
 - If the information is missing, say what is not known yet and what the user should check next.
 - Never invent programmes, deadlines, or guarantees.
+${isAgentScreen ? `- You are currently in the onboarding chat, so respond conversationally in 2-3 short sentences, not bullets.
+- If the payload says ONBOARDING MODE, acknowledge what the user said and either guide them back to the current onboarding question or ask the next onboarding question exactly once.
+- If SHOULD COMPLETE is yes, say you are opening the full form with smart prefills and do not ask another question.` : ''}
 
 Return strict JSON only:
 {
@@ -2071,6 +2076,31 @@ function buildLocalAssistantResponse({
   const normalizedQuestion = normalizeComparable(question);
   const topResult = results?.[0];
   const businessName = submittedProfile?.businessName || genericBusinessReference(language);
+
+  if (currentScreen === 'agent' || normalizedQuestion.includes('onboarding mode')) {
+    const nextQuestionMatch = question.match(/NEXT QUESTION:\s*(.+)/);
+    const currentQuestionMatch = question.match(/CURRENT QUESTION:\s*(.+)/);
+    const shouldComplete = /SHOULD COMPLETE:\s*yes/i.test(question);
+    const sideQuestion = /SIDE QUESTION:\s*yes/i.test(question);
+    const guideBackMatch = question.match(/GUIDE THE USER BACK TO:\s*(.+)/);
+    const inferredName = submittedProfile?.businessName?.trim();
+
+    if (shouldComplete) {
+      return inferredName
+        ? `Lovely, I have enough to move forward for ${inferredName}. I’m opening the full form with smart prefills so you can review everything before submitting anything important.`
+        : 'Lovely, I have enough to move forward. I’m opening the full form with smart prefills so you can review everything before submitting anything important.';
+    }
+
+    if (sideQuestion) {
+      return inferredName
+        ? `Happy to help. I’m still building the first picture for ${inferredName}, so let’s hop back to this part: ${guideBackMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a bit more about the business.'}`
+        : `Happy to help. Let’s hop back to this part: ${guideBackMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a bit more about the business.'}`;
+    }
+
+    return inferredName
+      ? `${inferredName} is starting to make sense to me now. ${nextQuestionMatch?.[1] || currentQuestionMatch?.[1] || 'Tell me a little more so I can prefill the form properly.'}`
+      : `${nextQuestionMatch?.[1] || currentQuestionMatch?.[1] || 'Tell me a little more so I can prefill the form properly.'}`;
+  }
 
   if (!submittedProfile && currentScreen === 'form') {
     return 'I can help as you fill this out. Share what the business does, where it is based, and what you want to fund, and I will point the form in the right direction before the full recommendation run.';

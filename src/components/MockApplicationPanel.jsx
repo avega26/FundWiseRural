@@ -50,6 +50,10 @@ const emptyDraft = {
   firstAuthorityQuestion: '',
 };
 
+function formatDocumentNames(fileList) {
+  return Array.from(fileList || []).map((file) => file.name);
+}
+
 function MockApplicationPanel({
   language,
   submittedProfile,
@@ -61,10 +65,12 @@ function MockApplicationPanel({
   const copy = getTranslation(language);
   const [draft, setDraft] = useState(emptyDraft);
   const [hasPrefilled, setHasPrefilled] = useState(false);
+  const [documentNames, setDocumentNames] = useState([]);
 
   useEffect(() => {
     setDraft(emptyDraft);
     setHasPrefilled(false);
+    setDocumentNames([]);
   }, [submittedProfile, profileReview, recommendation]);
 
   const handlePopulate = () => {
@@ -78,6 +84,10 @@ function MockApplicationPanel({
       ...current,
       [name]: value,
     }));
+  };
+
+  const handleDocumentChange = (event) => {
+    setDocumentNames(formatDocumentNames(event.target.files));
   };
 
   return (
@@ -141,6 +151,47 @@ function MockApplicationPanel({
               {copy.mockSignIn || 'Sign in'}
             </button>
           </div>
+        </div>
+
+        <div className="mock-account-card" aria-label="Upload documents">
+          <div>
+            <h4>{copy.mockDocumentsTitle || 'Add supporting documents'}</h4>
+            <p>
+              {copy.mockDocumentsDescription ||
+                'This demo upload area shows how applicants could attach draft budgets, project notes, quotes, or supporting evidence before formal submission.'}
+            </p>
+          </div>
+          <div className="mock-account-actions">
+            <label className="secondary-button secondary-button-quiet mock-upload-button" htmlFor="mockDocuments">
+              {copy.mockDocumentsButton || 'Select documents'}
+            </label>
+            <input
+              id="mockDocuments"
+              type="file"
+              multiple
+              className="sr-only"
+              onChange={handleDocumentChange}
+            />
+          </div>
+        </div>
+
+        {documentNames.length > 0 && (
+          <div className="mock-document-list" aria-live="polite">
+            <strong>{copy.mockDocumentsSelected || 'Selected documents'}</strong>
+            <ul className="draft-support-list">
+              {documentNames.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mock-privacy-card">
+          <h4>{copy.mockPrivacyTitle || 'Privacy and security note'}</h4>
+          <p>
+            {copy.mockPrivacyDescription ||
+              'In a production version, uploaded documents would be encrypted in transit, stored with access controls, and shared only with the applicant and the public bodies responsible for reviewing the application. This prototype treats privacy and security as core requirements rather than optional extras.'}
+          </p>
         </div>
 
         <div className="mock-application-grid">

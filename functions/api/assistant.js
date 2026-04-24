@@ -58,7 +58,7 @@ export async function onRequestPost(context) {
         {
           role: 'system',
           content:
-            'You are Clover, FundWise Rural’s floating assistant. Return only structured output matching the provided schema.',
+            'You are Seraphina, FundWise Rural’s floating assistant. Return only structured output matching the provided schema.',
         },
         {
           role: 'user',

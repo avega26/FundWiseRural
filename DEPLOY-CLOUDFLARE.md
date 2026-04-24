@@ -41,7 +41,7 @@ This must match the `wrangler.toml` file and the function code.
 
 ## Local development note
 
-When you run the app locally with `npm run dev`, the site still falls back to local Ollama or the local non-AI recommendation logic if the Cloudflare function is not running.
+When you run the app locally with `npm run dev`, the site falls back to the local non-AI recommendation logic if the Cloudflare function is not running. The intended production AI path is now Cloudflare Workers AI rather than local Ollama.
 
 ## Recommended final test
 

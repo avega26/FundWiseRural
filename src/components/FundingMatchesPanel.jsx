@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 function FundTypeInfo({ fundType, copy }) {
   const explanation = copy.fundTypeExplainers?.[fundType];
   const [isOpen, setIsOpen] = useState(false);
+  const dialogId = `fundtype-popup-${fundType.toLowerCase()}`;
 
   return (
     <span className="fundtype-info">
@@ -22,10 +23,16 @@ function FundTypeInfo({ fundType, copy }) {
             {copy.learnMoreLabel || 'Learn more'}
           </button>
           {isOpen && (
-            <span className="fundtype-popup" role="dialog" aria-modal="false">
-              <span className="fundtype-popup-card">
-                <span className="fundtype-popup-header">
-                  <strong>{fundType}</strong>
+            <div className="fundtype-popup" role="dialog" aria-modal="true" aria-labelledby={dialogId}>
+              <button
+                type="button"
+                className="fundtype-popup-backdrop"
+                aria-label="Close grant explanation"
+                onClick={() => setIsOpen(false)}
+              />
+              <div className="fundtype-popup-card">
+                <div className="fundtype-popup-header">
+                  <strong id={dialogId}>{fundType}</strong>
                   <button
                     type="button"
                     className="fundtype-popup-close"
@@ -34,15 +41,85 @@ function FundTypeInfo({ fundType, copy }) {
                   >
                     ×
                   </button>
-                </span>
-                <span className="fundtype-popup-body">{explanation}</span>
-              </span>
-            </span>
+                </div>
+                <div className="fundtype-popup-body">{explanation}</div>
+              </div>
+            </div>
           )}
         </>
       )}
     </span>
   );
+}
+
+function buildGeneralGrantMatches(grants, submittedProfile, profileReview, copy) {
+  if (submittedProfile?.grantScopePreference === 'regionalOnly') {
+    return [];
+  }
+
+  const context = `${submittedProfile?.additionalContext || ''} ${submittedProfile?.otherMainGoal || ''}`.toLowerCase();
+  const businessName = submittedProfile?.businessName?.trim() || 'this business';
+  const businessTypeLabel =
+    copy.businessTypes?.[submittedProfile?.businessType] || 'business';
+  const goalLabel =
+    submittedProfile?.mainGoal === 'other'
+      ? submittedProfile?.otherMainGoal?.trim() || copy.goals?.other || 'the current project'
+      : copy.goals?.[submittedProfile?.mainGoal] || submittedProfile?.otherMainGoal?.trim() || 'the current project';
+  const routePreference = profileReview?.routeClassification || 'mixed';
+
+  const buildRelevanceNote = (grant, matchedSignals, score) => {
+    const leadingSignals = matchedSignals.slice(0, 2).join(' and ');
+    const subject = businessName === 'this business' ? 'This business' : businessName;
+    const routeAngle =
+      routePreference === 'cap'
+        ? 'It works best as a broader complement to the agricultural route rather than a replacement for it.'
+        : routePreference === 'erdf'
+          ? 'It works best if the project needs a wider innovation, competitiveness, or scale-up angle beyond the regional route.'
+          : 'It is most useful if you want to keep a wider EU-level option in play alongside the regional recommendations.';
+
+    if (score >= 8) {
+      return `${subject} has a stronger-than-usual reason to look at this because the ${businessTypeLabel.toLowerCase()} profile and the goal to ${goalLabel.toLowerCase()} match the programme well${leadingSignals ? `, especially through signals like ${leadingSignals}` : ''}. ${routeAngle}`;
+    }
+
+    if (score >= 5) {
+      return `${subject} could still explore this if the project grows beyond a purely local grant search. The clearest fit comes from the goal to ${goalLabel.toLowerCase()}${leadingSignals ? ` and business signals such as ${leadingSignals}` : ''}. ${routeAngle}`;
+    }
+
+    return `${subject} is a lighter fit here, but this may still be worth keeping on the radar if the project develops into a broader EU-facing application. ${routeAngle}`;
+  };
+
+  return grants
+    .map((grant) => {
+      const goalMatch = grant.fitRules.mainGoals.includes(submittedProfile?.mainGoal) ? 3 : 0;
+      const businessTypeMatch = grant.fitRules.businessTypes.includes(submittedProfile?.businessType) ? 3 : 0;
+      const matchedSignals = grant.fitRules.contextSignals.filter((signal) => context.includes(signal));
+      const contextMatch = Math.min(matchedSignals.length, 4);
+      const ruralBoost =
+        submittedProfile?.ruralArea === 'yes' &&
+        ['eu-life-programme', 'eu-innovation-fund', 'eu-horizon-europe'].includes(grant.id)
+          ? 1
+          : 0;
+      const score = goalMatch + businessTypeMatch + contextMatch + ruralBoost;
+
+      const reasons = [];
+
+      if (goalMatch) reasons.push('your main project goal');
+      if (businessTypeMatch) reasons.push('your business type');
+      if (matchedSignals.length) reasons.push(`signals like ${matchedSignals.slice(0, 2).join(' and ')}`);
+      if (ruralBoost) reasons.push('its relevance to green or place-based transition work');
+
+      return {
+        ...grant,
+        matchScore: score,
+        relevanceNote: buildRelevanceNote(grant, matchedSignals, score),
+        quickReason: reasons.length
+          ? `Why it surfaced: ${reasons.join(', ')}.`
+          : 'Why it surfaced: broader EU-level fit.',
+      };
+    })
+    .filter((grant) => grant.matchScore > 0)
+    .sort((left, right) => right.matchScore - left.matchScore)
+    .slice(0, 10);
 }
 
 function FundingMatchesPanel({
@@ -68,14 +145,12 @@ function FundingMatchesPanel({
   const [draftSupportById, setDraftSupportById] = useState({});
   const [helpfulVote, setHelpfulVote] = useState('');
   const copy = getTranslation(language);
-  const additionalGeneralGrants = generalGrantOptions.filter((grant) => {
-    const context = `${submittedProfile?.additionalContext || ''} ${submittedProfile?.otherMainGoal || ''}`.toLowerCase();
-    const matchesGoal = grant.fitRules.mainGoals.includes(submittedProfile?.mainGoal);
-    const matchesBusinessType = grant.fitRules.businessTypes.includes(submittedProfile?.businessType);
-    const matchesContext = grant.fitRules.contextSignals.some((signal) => context.includes(signal));
-
-    return matchesGoal || matchesBusinessType || matchesContext;
-  }).slice(0, 2);
+  const additionalGeneralGrants = buildGeneralGrantMatches(
+    generalGrantOptions,
+    submittedProfile,
+    profileReview,
+    copy,
+  );
   const showEmptyState = hasSubmitted && !isLoading && !errorMessage && results.length === 0;
   const topMockApplicationCandidate = results[0]?.supportsMockApplication ? results[0] : null;
   const completionRate = metrics.pageVisits
@@ -610,7 +685,7 @@ function FundingMatchesPanel({
               </div>
               <p className="panel-copy">
                 {copy.generalGrantDescription ||
-                  'These are broader EU-wide programmes that may also be worth exploring alongside the main regional match.'}
+                  'These are broader EU-wide programmes that surfaced because parts of your business profile also point beyond the main regional match.'}
               </p>
               <div className="general-grants-grid">
                 {additionalGeneralGrants.map((grant) => (
@@ -622,6 +697,8 @@ function FundingMatchesPanel({
                       <span className="badge general-badge">{grant.shortType}</span>
                     </div>
                     <p>{grant.summary}</p>
+                    <p className="general-grant-note">{grant.relevanceNote}</p>
+                    <p className="general-grant-why">{grant.quickReason}</p>
                     <div className="card-actions">
                       <a
                         className="external-link-btn"
