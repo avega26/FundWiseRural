@@ -31,6 +31,10 @@ function FloatingAssistant({
       return 'I can help you turn this mock application into a stronger first draft, especially if you want help with framing or evidence.';
     }
 
+    if (currentScreen === 'dashboard') {
+      return 'I can help explain the dashboard, application stages, secure messages, or what a grant manager is asking for.';
+    }
+
     return 'I can help explain the form, decode CAP versus ERDF, or suggest what details matter most before you search.';
   }, [currentScreen, results]);
   const [messages, setMessages] = useState([
@@ -67,6 +71,14 @@ function FloatingAssistant({
         'How should I frame this application?',
         'What evidence should I gather first?',
         'What would make this stronger?',
+      ];
+    }
+
+    if (currentScreen === 'dashboard') {
+      return [
+        'What does this stage mean?',
+        'How should I reply to the case manager?',
+        'What should I upload next?',
       ];
     }
 

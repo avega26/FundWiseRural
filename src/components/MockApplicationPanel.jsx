@@ -59,6 +59,9 @@ function MockApplicationPanel({
   submittedProfile,
   profileReview,
   recommendation,
+  onSaveDraft,
+  onSubmitApplication,
+  onOpenDashboard,
   onBackToResults,
   onStartOver,
 }) {
@@ -66,11 +69,13 @@ function MockApplicationPanel({
   const [draft, setDraft] = useState(emptyDraft);
   const [hasPrefilled, setHasPrefilled] = useState(false);
   const [documentNames, setDocumentNames] = useState([]);
+  const [accountPrompt, setAccountPrompt] = useState(null);
 
   useEffect(() => {
     setDraft(emptyDraft);
     setHasPrefilled(false);
     setDocumentNames([]);
+    setAccountPrompt(null);
   }, [submittedProfile, profileReview, recommendation]);
 
   const handlePopulate = () => {
@@ -88,6 +93,40 @@ function MockApplicationPanel({
 
   const handleDocumentChange = (event) => {
     setDocumentNames(formatDocumentNames(event.target.files));
+  };
+
+  const handleSaveDraft = () => {
+    const application = onSaveDraft?.({
+      draft,
+      documentNames,
+      recommendation,
+    });
+
+    if (application?.id) {
+      setAccountPrompt({
+        applicationId: application.id,
+        type: 'draft',
+      });
+    }
+  };
+
+  const handleSubmit = () => {
+    const application = onSubmitApplication?.({
+      draft,
+      documentNames,
+      recommendation,
+    });
+
+    if (application?.id) {
+      setAccountPrompt({
+        applicationId: application.id,
+        type: 'submitted',
+      });
+    }
+  };
+
+  const handleDismissPrompt = () => {
+    setAccountPrompt(null);
   };
 
   return (
@@ -134,24 +173,6 @@ function MockApplicationPanel({
               'The draft below was prefilled from the intake form, top recommendation, and AI-generated support text.'}
           </p>
         )}
-
-        <div className="mock-account-card" aria-label={copy.mockAccountTitle || 'Create an account'}>
-          <div>
-            <h4>{copy.mockAccountTitle || 'Create an account to track this application'}</h4>
-            <p>
-              {copy.mockAccountDescription ||
-                'This is a demo-only placeholder showing how applicants could create an account to save progress, return later, and track status updates.'}
-            </p>
-          </div>
-          <div className="mock-account-actions">
-            <button type="button" className="secondary-button secondary-button-quiet">
-              {copy.mockCreateAccount || 'Create account'}
-            </button>
-            <button type="button" className="secondary-button secondary-button-quiet">
-              {copy.mockSignIn || 'Sign in'}
-            </button>
-          </div>
-        </div>
 
         <div className="mock-account-card" aria-label="Upload documents">
           <div>
@@ -311,11 +332,64 @@ function MockApplicationPanel({
             {copy.mockSubmitDisclaimer ||
               'Demo only: this submit action is not connected to a real backend or government application portal yet.'}
           </p>
-          <button type="button" className="primary-button">
-            {copy.mockSubmitButton || 'Submit application'}
-          </button>
+          <div className="mock-account-actions">
+            <button type="button" className="secondary-button secondary-button-quiet" onClick={handleSaveDraft}>
+              {copy.mockSaveDraftButton || 'Save and finish later'}
+            </button>
+            <button type="button" className="primary-button" onClick={handleSubmit}>
+              {copy.mockSubmitButton || 'Submit application'}
+            </button>
+          </div>
         </div>
+
       </div>
+      {accountPrompt && (
+        <div className="mock-account-modal" role="dialog" aria-modal="true" aria-labelledby="mock-account-modal-title">
+          <button
+            type="button"
+            className="mock-account-modal-backdrop"
+            aria-label="Close account prompt"
+            onClick={handleDismissPrompt}
+          />
+          <div className="mock-account-modal-card" aria-live="polite">
+            <button type="button" className="mock-account-close" onClick={handleDismissPrompt} aria-label="Close">
+              x
+            </button>
+            <div>
+              <p className="summary-kicker">{accountPrompt.type === 'draft' ? 'Draft saved' : 'Application submitted'}</p>
+              <h4 id="mock-account-modal-title">
+                {copy.mockAccountTitle || 'Create an account to track this application'}
+              </h4>
+              <p>
+                {accountPrompt.type === 'draft'
+                  ? copy.mockSavedDraftPrompt ||
+                    'Your draft is saved. Create an account or sign in to return later, review the form, and track any follow-up requests from the grants team.'
+                  : copy.mockSubmittedPrompt ||
+                    'Your mock application has been submitted. Create an account or sign in to open your dashboard, track progress, and message the case officer securely.'}
+              </p>
+            </div>
+            <div className="mock-account-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => onOpenDashboard?.(accountPrompt.applicationId)}
+              >
+                {copy.mockCreateAccount || 'Create account'}
+              </button>
+              <button
+                type="button"
+                className="secondary-button secondary-button-quiet"
+                onClick={() => onOpenDashboard?.(accountPrompt.applicationId)}
+              >
+                {copy.mockSignIn || 'Sign in'}
+              </button>
+            </div>
+            <p className="mock-account-footnote">
+              Prototype note: this demo does not store real account credentials, but it shows where the sign-in step would happen before the dashboard opens.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -110,11 +110,46 @@ function buildGeneralGrantMatches(grants, submittedProfile, profileReview, copy)
 
       return {
         ...grant,
+        name: grant.title,
+        fundType: 'EU',
         matchScore: score,
+        fitScore: Math.min(92, 42 + score * 7),
+        fitBreakdown: {
+          businessType: Math.min(4, businessTypeMatch),
+          projectGoal: Math.min(4, goalMatch),
+          rural: ruralBoost,
+          size: 1,
+          context: Math.min(3, contextMatch),
+          routeFit: 2,
+        },
+        eligibility: score >= 8 ? 'likely' : score >= 5 ? 'possible' : 'unlikely',
+        explanation: buildRelevanceNote(grant, matchedSignals, score),
         relevanceNote: buildRelevanceNote(grant, matchedSignals, score),
         quickReason: reasons.length
           ? `Why it surfaced: ${reasons.join(', ')}.`
           : 'Why it surfaced: broader EU-level fit.',
+        routeSummary: grant.summary,
+        nextStep:
+          'Review the current call, confirm applicant scope and partnership requirements, and prepare a short project framing note before opening the official route.',
+        rankingReason:
+          'This EU-wide route surfaced because the business profile and project goal suggest possible relevance beyond the strongest regional pathway.',
+        routeDetails: {
+          programme: grant.title,
+          country: 'EU-wide',
+          region: 'Multiple eligible countries',
+          authority: 'European Commission / programme managing body',
+        },
+        routeContext: {
+          targetApplicants: `${businessTypeLabel} applicants with projects tied to ${goalLabel.toLowerCase()}`,
+          commonPriorities: matchedSignals,
+          commonConstraints: ['Check current call scope', 'Confirm applicant and partnership rules'],
+          regionNotes: ['This is an EU-wide route rather than a single regional grant programme.'],
+        },
+        estimatedTimeline: {
+          prep: 'Preparation can take longer because EU-wide calls often expect a clearer framing note and stronger supporting evidence.',
+          submit: 'Submission timing depends on the live call window and whether the programme uses staged or full applications.',
+          review: 'Review periods vary by programme and are often longer than regional routes because of wider competition and programme complexity.',
+        },
       };
     })
     .filter((grant) => grant.matchScore > 0)
@@ -132,6 +167,9 @@ function FundingMatchesPanel({
   onHelpfulVote,
   onResetMetrics,
   onOpenMockApplication,
+  onSaveRecommendation,
+  onOpenDashboard,
+  canSaveResults = false,
   language,
   businessName,
   submittedProfile,
@@ -144,6 +182,7 @@ function FundingMatchesPanel({
   const [activeResultId, setActiveResultId] = useState(null);
   const [draftSupportById, setDraftSupportById] = useState({});
   const [helpfulVote, setHelpfulVote] = useState('');
+  const [savedRecommendationIds, setSavedRecommendationIds] = useState([]);
   const copy = getTranslation(language);
   const additionalGeneralGrants = buildGeneralGrantMatches(
     generalGrantOptions,
@@ -284,6 +323,18 @@ function FundingMatchesPanel({
     });
   };
 
+  const handleSaveRoute = (item) => {
+    if (!canSaveResults) {
+      return null;
+    }
+
+    const savedItem = onSaveRecommendation?.(item);
+    setSavedRecommendationIds((current) =>
+      current.includes(item.id) ? current : [...current, item.id],
+    );
+    return savedItem;
+  };
+
   const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
   const hasList = (value) => Array.isArray(value) && value.some((entry) => hasText(entry));
   const breakdownMax = {
@@ -295,7 +346,7 @@ function FundingMatchesPanel({
     routeFit: 3,
   };
   const formatBreakdown = (key, value) => `${value}/${breakdownMax[key]}`;
-  const activeResult = results.find((item) => item.id === activeResultId) || null;
+  const activeResult = [...results, ...additionalGeneralGrants].find((item) => item.id === activeResultId) || null;
   const activeDraftSupport = activeResult ? draftSupportById[activeResult.id] : null;
   const renderDraftSupport = (item, draftSupport) => {
     if (
@@ -611,6 +662,18 @@ function FundingMatchesPanel({
               >
                 {copy.downloadResults}
               </button>
+              <button
+                type="button"
+                className="official-link summary-action-btn action-button"
+                disabled={!canSaveResults}
+                onClick={() => handleSaveRoute(results[0])}
+              >
+                {!canSaveResults
+                  ? copy.loginToSave || 'Login to save'
+                  : savedRecommendationIds.includes(results[0].id)
+                  ? copy.savedToDashboard || 'Saved to dashboard'
+                  : copy.saveToDashboard || 'Save to dashboard'}
+              </button>
               {topMockApplicationCandidate && (
                 <button
                   type="button"
@@ -673,10 +736,31 @@ function FundingMatchesPanel({
                   >
                     {copy.openProgrammePage(item.fundType)}
                   </a>
+                  <button
+                    type="button"
+                    className="secondary-button secondary-button-quiet"
+                    disabled={!canSaveResults}
+                    onClick={() => handleSaveRoute(item)}
+                  >
+                    {!canSaveResults
+                      ? copy.loginToSave || 'Login to save'
+                      : savedRecommendationIds.includes(item.id)
+                      ? copy.savedToDashboard || 'Saved to dashboard'
+                      : copy.saveToDashboard || 'Save to dashboard'}
+                  </button>
                 </div>
               </article>
             ))}
           </div>
+
+          {!canSaveResults && (
+            <div className="results-card save-results-note">
+              <p className="panel-copy">
+                {copy.saveResultsLoginNote ||
+                  'Use the login option on the homepage if you want to save funding routes and revisit them later from the dashboard.'}
+              </p>
+            </div>
+          )}
 
           {additionalGeneralGrants.length > 0 && (
             <div className="general-grants-card">
@@ -700,6 +784,13 @@ function FundingMatchesPanel({
                     <p className="general-grant-note">{grant.relevanceNote}</p>
                     <p className="general-grant-why">{grant.quickReason}</p>
                     <div className="card-actions">
+                      <button
+                        type="button"
+                        className="secondary-button secondary-button-quiet"
+                        onClick={() => openResultDetail(grant.id)}
+                      >
+                        {copy.showFullResult || 'Show full result'}
+                      </button>
                       <a
                         className="external-link-btn"
                         href={grant.applicationPage}
@@ -717,6 +808,18 @@ function FundingMatchesPanel({
                       >
                         {copy.openOfficialInfo}
                       </a>
+                      <button
+                        type="button"
+                        className="secondary-button secondary-button-quiet"
+                        disabled={!canSaveResults}
+                        onClick={() => handleSaveRoute(grant)}
+                      >
+                        {!canSaveResults
+                          ? copy.loginToSave || 'Login to save'
+                          : savedRecommendationIds.includes(grant.id)
+                            ? copy.savedToDashboard || 'Saved to dashboard'
+                            : copy.saveToDashboard || 'Save to dashboard'}
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -735,6 +838,21 @@ function FundingMatchesPanel({
                   </div>
                   <button type="button" className="secondary-button secondary-button-quiet" onClick={closeResultDetail}>
                     {copy.backToResults || 'Back to results'}
+                  </button>
+                </div>
+
+                <div className="result-overlay-actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    disabled={!canSaveResults}
+                    onClick={() => handleSaveRoute(activeResult)}
+                  >
+                    {!canSaveResults
+                      ? copy.loginToSave || 'Login to save'
+                      : savedRecommendationIds.includes(activeResult.id)
+                      ? copy.savedToDashboard || 'Saved to dashboard'
+                      : copy.saveToDashboard || 'Save to dashboard'}
                   </button>
                 </div>
 
@@ -815,7 +933,9 @@ function FundingMatchesPanel({
                       rel="noreferrer"
                       onClick={onApplicationClick}
                     >
-                      {copy.openProgrammePage(activeResult.fundType)}
+                      {activeResult.fundType === 'EU'
+                        ? copy.openGeneralGrant || 'Open grant info'
+                        : copy.openProgrammePage(activeResult.fundType)}
                     </a>
                     <a className="official-link" href={activeResult.officialPage} target="_blank" rel="noreferrer">
                       {copy.openOfficialInfo}

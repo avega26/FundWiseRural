@@ -107,6 +107,7 @@ function BusinessProfilePanel({
   isDeveloperMode = false,
 }) {
   const [formData, setFormData] = useState(initialFormData);
+  const [includeMockApplication, setIncludeMockApplication] = useState(false);
   const copy = getTranslation(language);
   const availableRegions = regionsByCountry[formData.country] ?? [];
   const showAgricultureSubType = ['farm', 'foodProducer', 'agriTourism'].includes(
@@ -124,6 +125,7 @@ function BusinessProfilePanel({
       ...initialProfile,
       preferredLanguage: initialProfile.preferredLanguage || currentData.preferredLanguage || language,
     }));
+    setIncludeMockApplication(false);
 
     if (initialProfile.preferredLanguage) {
       onLanguageChange(initialProfile.preferredLanguage);
@@ -189,7 +191,7 @@ function BusinessProfilePanel({
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log('FundWise Rural business profile:', formData);
-    onSubmitProfile(formData);
+    onSubmitProfile(formData, { openMockApplication: includeMockApplication });
   };
 
   const handleDemoFill = (scenario) => {
@@ -200,6 +202,7 @@ function BusinessProfilePanel({
     }
 
     setFormData(selectedProfile);
+    setIncludeMockApplication(scenario === 'mock');
     onLanguageChange(selectedProfile.preferredLanguage);
   };
 
@@ -487,9 +490,29 @@ function BusinessProfilePanel({
                 </button>
               </div>
             )}
-            <button type="submit" className="primary-button primary-button-large">
-              {copy.findFunding}
-            </button>
+            <div className="form-submit-row">
+              <button type="submit" className="primary-button primary-button-large">
+                {copy.findFunding}
+              </button>
+              <label className="mock-route-toggle" htmlFor="includeMockApplication">
+                <input
+                  id="includeMockApplication"
+                  type="checkbox"
+                  checked={includeMockApplication}
+                  onChange={(event) => setIncludeMockApplication(event.target.checked)}
+                />
+                <span className="mock-route-toggle-ui" aria-hidden="true">
+                  <span className="mock-route-toggle-knob" />
+                </span>
+                <span className="mock-route-toggle-copy">
+                  <strong>{copy.includeMockApplication || 'Include mock application route'}</strong>
+                  <small>
+                    {copy.includeMockApplicationHelp ||
+                      'If the top result supports it, continue straight into the application flow after matching.'}
+                  </small>
+                </span>
+              </label>
+            </div>
           </div>
           </fieldset>
         </form>

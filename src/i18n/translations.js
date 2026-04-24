@@ -107,11 +107,11 @@ export const translations = {
     intakeEyebrow: 'Business Profile',
     intakeTitle: 'Tell us about the business and project.',
     intakeDescription:
-      'Complete the profile below to generate tailored prototype recommendations for EU rural funding opportunities.',
+      'Complete the profile below to generate tailored recommendations for EU rural funding opportunities.',
     resultsEyebrow: 'Funding Results',
     resultsTitle: 'Your Funding Recommendations',
     resultsDescription:
-      'Review the strongest prototype matches below and use them as a starting point for further programme research.',
+      'Review the strongest matches below and use them as a starting point for further programme research.',
     resultsPlaceholder: 'Your recommended funding opportunities will appear here.',
     generating: 'Generating recommendations...',
     noMatches: 'No strong matches found. Try adjusting your business profile.',
@@ -127,7 +127,7 @@ export const translations = {
     metricsButton: 'View metrics',
     metricsTitle: 'Demo metrics',
     metricsDisclaimer:
-      'These counts are stored locally in this browser for prototype testing only.',
+      'These counts are stored locally in this browser for internal product testing only.',
     metricsUsers: 'Number of users',
     metricsCompletedSearches: 'Completed Find Funding searches',
     metricsCompletionRate: 'Completion rate',
@@ -233,7 +233,7 @@ export const translations = {
     mockApplicationEyebrow: 'Mock Grant Form',
     mockApplicationTitle: 'Mock first-step application',
     mockApplicationDescription:
-      'This demo form shows how the intake profile and AI guidance could prefill a first-stage public funding application.',
+      'This form shows how the intake profile and AI guidance could prefill a first-stage public funding application.',
     mockApplicationHelper:
       'Use the button below to pull in the intake form responses and AI-generated guidance as a draft for the first application step.',
     populateMockApplication: 'Populate from intake + AI summary',
@@ -245,7 +245,15 @@ export const translations = {
     mockProjectTitle: 'Project title',
     mockAccountTitle: 'Create an account to track this application',
     mockAccountDescription:
-      'This is a demo-only placeholder showing how applicants could create an account to save progress, return later, and track status updates.',
+      'This placeholder shows how applicants could create an account to save progress, return later, and track status updates.',
+    saveToDashboard: 'Save to dashboard',
+    savedToDashboard: 'Saved to dashboard',
+    loginToSave: 'Login to save',
+    saveResultsLoginNote:
+      'Login from the homepage if you want to save funding routes and revisit them later from the dashboard.',
+    includeMockApplication: 'Include mock application route',
+    includeMockApplicationHelp:
+      'If the top result supports it, continue straight into the application flow after matching.',
     mockCreateAccount: 'Create account',
     mockSignIn: 'Sign in',
     mockSubmitButton: 'Submit application',
