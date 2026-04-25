@@ -434,7 +434,17 @@ function BusinessProfilePanel({
                       checked={formData.specialTags.includes(tag.value)}
                       onChange={handleTagChange}
                     />
-                    <span>{copy.tags[tag.labelKey]}</span>
+                    <span className="tag-label-with-help">
+                      <span>{copy.tags[tag.labelKey]}</span>
+                      <span
+                        className="tag-help-dot"
+                        title={copy.tagDescriptions?.[tag.labelKey] || ''}
+                        aria-label={copy.tagDescriptions?.[tag.labelKey] || ''}
+                        tabIndex="0"
+                      >
+                        ?
+                      </span>
+                    </span>
                   </label>
                 ))}
               </div>

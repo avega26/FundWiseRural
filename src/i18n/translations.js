@@ -348,6 +348,13 @@ export const translations = {
       sustainable: 'Sustainable',
       innovative: 'Innovative',
     },
+    tagDescriptions: {
+      womenOwned: 'The business is led or majority-owned by women.',
+      youthOwned: 'The business is led by younger founders or owners, usually early in their career.',
+      cooperative: 'The business is structured as a cooperative or shared-member enterprise.',
+      sustainable: 'The business has a strong focus on environmental or long-term sustainability practices.',
+      innovative: 'The business is developing a new idea, process, service, or digital approach.',
+    },
     eligibility: {
       likely: 'Likely',
       possible: 'Possible',
@@ -547,6 +554,13 @@ export const translations = {
       cooperative: 'Cooperativa',
       sustainable: 'Sostenible',
       innovative: 'Innovadora',
+    },
+    tagDescriptions: {
+      womenOwned: 'La empresa está dirigida o es mayoritariamente propiedad de mujeres.',
+      youthOwned: 'La empresa está dirigida por fundadores o propietarios jóvenes, normalmente al inicio de su trayectoria.',
+      cooperative: 'La empresa está organizada como cooperativa o entidad de propiedad compartida entre miembros.',
+      sustainable: 'La empresa tiene un fuerte enfoque en prácticas medioambientales o de sostenibilidad a largo plazo.',
+      innovative: 'La empresa está desarrollando una idea, proceso, servicio o enfoque digital nuevo.',
     },
     eligibility: {
       likely: 'Probable',
@@ -750,6 +764,13 @@ export const translations = {
       sustainable: 'Sostenibile',
       innovative: 'Innovativa',
     },
+    tagDescriptions: {
+      womenOwned: 'L’impresa è guidata o posseduta in maggioranza da donne.',
+      youthOwned: 'L’impresa è guidata da fondatori o titolari giovani, di solito all’inizio del loro percorso.',
+      cooperative: 'L’impresa è organizzata come cooperativa o come struttura condivisa tra membri.',
+      sustainable: 'L’impresa ha una forte attenzione verso pratiche ambientali o di sostenibilità di lungo periodo.',
+      innovative: 'L’impresa sta sviluppando una nuova idea, processo, servizio o approccio digitale.',
+    },
     eligibility: {
       likely: 'Probabile',
       possible: 'Possibile',
@@ -949,6 +970,13 @@ export const translations = {
       cooperative: 'Spółdzielnia',
       sustainable: 'Zrównoważona',
       innovative: 'Innowacyjna',
+    },
+    tagDescriptions: {
+      womenOwned: 'Firma jest prowadzona lub w większości należy do kobiet.',
+      youthOwned: 'Firma jest prowadzona przez młodszych założycieli lub właścicieli, zwykle na początku kariery.',
+      cooperative: 'Firma działa jako spółdzielnia lub wspólne przedsiębiorstwo członków.',
+      sustainable: 'Firma mocno koncentruje się na praktykach środowiskowych lub długoterminowej zrównoważoności.',
+      innovative: 'Firma rozwija nowy pomysł, proces, usługę lub podejście cyfrowe.',
     },
     eligibility: {
       likely: 'Prawdopodobne',
@@ -1151,6 +1179,13 @@ export const translations = {
       cooperative: 'Coopérative',
       sustainable: 'Durable',
       innovative: 'Innovante',
+    },
+    tagDescriptions: {
+      womenOwned: 'L’entreprise est dirigée ou majoritairement détenue par des femmes.',
+      youthOwned: 'L’entreprise est dirigée par de jeunes fondateurs ou propriétaires, généralement en début de parcours.',
+      cooperative: 'L’entreprise est organisée sous forme de coopérative ou de structure partagée entre membres.',
+      sustainable: 'L’entreprise met fortement l’accent sur des pratiques environnementales ou de durabilité à long terme.',
+      innovative: 'L’entreprise développe une nouvelle idée, un nouveau processus, service ou usage numérique.',
     },
     eligibility: {
       likely: 'Probable',

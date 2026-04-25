@@ -970,6 +970,28 @@ textarea:focus-visible {
   accent-color: var(--eu-blue);
 }
 
+.tag-label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-help-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid #bcd0dd;
+  background: #f7fbfd;
+  color: #47647a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: help;
+  box-shadow: 0 4px 10px rgba(0, 70, 112, 0.06);
+}
+
 .form-actions {
   display: flex;
   gap: 12px;
