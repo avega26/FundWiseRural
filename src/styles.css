@@ -1303,6 +1303,7 @@ textarea:focus-visible {
 }
 
 .general-grants-card {
+  overflow: hidden;
   padding: 20px 22px;
   border: 1px solid rgba(188, 208, 221, 0.92);
   border-radius: 18px;
@@ -1315,9 +1316,11 @@ textarea:focus-visible {
 .general-grants-grid {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(280px, 320px);
+  grid-auto-columns: calc((100% - 32px) / 3);
   gap: 16px;
   margin-top: 16px;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0 6px 8px 0;
@@ -1341,6 +1344,7 @@ textarea:focus-visible {
 }
 
 .general-grant-item {
+  width: 100%;
   min-height: 100%;
   padding: 18px 18px 20px;
   border: 1px solid rgba(188, 208, 221, 0.9);
@@ -1364,6 +1368,18 @@ textarea:focus-visible {
   margin: 10px 0 0;
   color: #4f6b80;
   font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .general-grants-grid {
+    grid-auto-columns: calc((100% - 16px) / 2);
+  }
+}
+
+@media (max-width: 720px) {
+  .general-grants-grid {
+    grid-auto-columns: minmax(88%, 88%);
+  }
 }
 
 .general-grant-why {
