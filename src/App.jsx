@@ -262,6 +262,20 @@ function App() {
     }
   }, [currentScreen]);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
+    if (currentScreen === 'agent') {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [currentScreen]);
+
   const updateMetrics = (metricKey) => {
     setMetrics((current) => {
       const next = {
@@ -569,11 +583,15 @@ function App() {
   };
 
   return (
-    <div className={`app-shell${isLowBandwidthMode ? ' low-bandwidth-mode' : ''}`}>
+    <div
+      className={`app-shell${isLowBandwidthMode ? ' low-bandwidth-mode' : ''}${
+        currentScreen === 'agent' ? ' app-shell-agent' : ''
+      }`}
+    >
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
-      <div className="page-frame">
+      <div className={`page-frame${currentScreen === 'agent' ? ' page-frame-agent' : ''}`}>
         <div className="mode-toggle-bar">
           <span className="mode-toggle-label">View mode</span>
           <div className="mode-toggle" role="tablist" aria-label="View mode">

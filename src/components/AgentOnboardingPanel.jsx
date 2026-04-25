@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { askFundwiseAssistant } from '../aiHelper';
 import { countryOptions, defaultLanguage, getTranslation, languageOptions, regionsByCountry } from '../i18n/translations';
+import SeraphinaAvatar from './SeraphinaAvatar';
 
 const agentQuestions = [
   'What is your business called, and what kind of work do you do?',
@@ -862,41 +863,13 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       <div className="agent-card">
         <div className="agent-hero">
           <div className="agent-bot" aria-hidden="true">
-            <svg viewBox="0 0 120 120" className="agent-bot-svg">
-              <defs>
-                <linearGradient id="cloverFrame" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="100%" stopColor="#edf2f7" />
-                </linearGradient>
-              </defs>
-              <circle cx="60" cy="60" r="51" fill="url(#cloverFrame)" stroke="#d9e8f2" strokeWidth="3" />
-              <path d="M29 98c8-18 22-27 31-27s23 9 31 27" fill="#d8ebf8" />
-              <path d="M40 40 49 21 62 36" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" strokeLinejoin="round" />
-              <path d="M80 40 71 21 58 36" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" strokeLinejoin="round" />
-              <circle cx="60" cy="50" r="27" fill="#eef2f6" stroke="#aebac5" strokeWidth="3" />
-              <ellipse cx="50" cy="49" rx="3" ry="3.8" fill="#1c3348" />
-              <ellipse cx="70" cy="49" rx="3" ry="3.8" fill="#1c3348" />
-              <ellipse cx="60" cy="59" rx="4.4" ry="3.5" fill="#f3c548" />
-              <circle cx="45" cy="57" r="4.6" fill="#f4dbe2" opacity="0.82" />
-              <circle cx="75" cy="57" r="4.6" fill="#f4dbe2" opacity="0.82" />
-              <path d="M51 58l-15-2" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M51 64H35" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M69 58l15-2" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M69 64h15" stroke="#7f8b98" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M55 66c1.8 2.1 7.2 2.1 10 0" fill="none" stroke="#7f8b98" strokeWidth="2.6" strokeLinecap="round" />
-              <path d="M73 74c0 6-6 11-13 11s-13-5-13-11" fill="#ffffff" opacity="0.78" />
-              <circle cx="60" cy="78" r="5.2" fill="#6b8ea6" />
-              <circle cx="60" cy="78" r="1.8" fill="#ffffff" />
-              <path d="M43 83c5-5 11-8 17-8s12 3 17 8" fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-              <circle cx="96" cy="88" r="9" fill="#ffffff" stroke="#d9e8f2" strokeWidth="2" />
-              <path d="M96 84v8M92 88h8" stroke="#4b9bc9" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
+            <SeraphinaAvatar className="agent-bot-svg" />
           </div>
           <div>
             <p className="eyebrow">AI Guide</p>
             <h2 id="agent-title">Meet Seraphina</h2>
             <p className="panel-copy">
-              Seraphina floats above the full intake, asks a few quick setup questions, and then hands you into the full form with smart prefills already waiting.
+              Seraphina will ask a few quick questions to understand your business, then help you start the full form with some details already filled in.
             </p>
             <div className="agent-language-row">
               <label htmlFor="agentPreferredLanguage">Preferred language</label>

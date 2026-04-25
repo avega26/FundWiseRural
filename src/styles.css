@@ -98,6 +98,12 @@ textarea:focus-visible {
   background-position: center top;
 }
 
+.app-shell-agent {
+  height: 100vh;
+  overflow: hidden;
+  padding-bottom: 28px;
+}
+
 .low-bandwidth-mode {
   background: #eef4f8;
 }
@@ -147,6 +153,12 @@ textarea:focus-visible {
   max-width: 1240px;
   margin: 0 auto;
   position: relative;
+}
+
+.page-frame-agent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-frame::before {
@@ -210,6 +222,8 @@ textarea:focus-visible {
 .agent-stage {
   position: relative;
   min-height: calc(100vh - 120px);
+  height: 100%;
+  overflow: hidden;
 }
 
 .agent-preview {
@@ -237,10 +251,12 @@ textarea:focus-visible {
 
 .agent-overlay {
   position: absolute;
-  inset: 28px 0 auto;
+  inset: 0;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 18px 24px 24px;
+  overflow: hidden;
 }
 
 .hero {
@@ -557,7 +573,7 @@ textarea:focus-visible {
 
 .agent-shell {
   display: grid;
-  width: min(100%, 820px);
+  width: min(100%, 720px);
   position: relative;
   z-index: 1;
   animation: assistantFadeIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -565,7 +581,7 @@ textarea:focus-visible {
 
 .agent-card {
   position: relative;
-  padding: 28px 30px 30px;
+  padding: 24px 26px 26px;
   border: 1px solid rgba(188, 208, 221, 0.9);
   border-radius: 26px;
   background:
@@ -582,7 +598,7 @@ textarea:focus-visible {
 .agent-hero {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
@@ -590,8 +606,8 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  height: 120px;
+  width: 108px;
+  height: 108px;
   border-radius: 999px;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), rgba(255, 240, 246, 0.88)),
@@ -603,8 +619,8 @@ textarea:focus-visible {
 }
 
 .agent-bot-svg {
-  width: 96px;
-  height: 96px;
+  width: 88px;
+  height: 88px;
   display: block;
   overflow: visible;
 }
@@ -612,8 +628,8 @@ textarea:focus-visible {
 .agent-chat {
   display: grid;
   gap: 12px;
-  margin-top: 24px;
-  max-height: min(42vh, 360px);
+  margin-top: 20px;
+  max-height: min(34vh, 300px);
   overflow: auto;
   padding: 4px 2px 2px;
 }
@@ -677,7 +693,7 @@ textarea:focus-visible {
 .agent-input-row {
   display: grid;
   gap: 12px;
-  margin-top: 22px;
+  margin-top: 18px;
 }
 
 .agent-input-row textarea {
@@ -2412,12 +2428,12 @@ textarea:focus-visible {
 .assistant-bubble {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px 10px 10px;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
   border: 1px solid rgba(0, 101, 162, 0.14);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 34px rgba(0, 70, 112, 0.18);
+  box-shadow: 0 12px 24px rgba(0, 70, 112, 0.14);
   backdrop-filter: blur(14px);
   cursor: pointer;
   animation: assistantFloat 3.2s ease-in-out infinite;
@@ -2427,16 +2443,16 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   background: linear-gradient(180deg, #f5f8fb, #e7eef4);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .assistant-bubble-svg {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   overflow: visible;
 }
 
@@ -2447,27 +2463,25 @@ textarea:focus-visible {
 
 .assistant-bubble-copy strong {
   color: #173e5d;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .assistant-bubble-copy span {
   color: #587286;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .assistant-panel {
-  width: min(380px, calc(100vw - 28px));
-  max-height: min(72vh, 680px);
+  width: min(332px, calc(100vw - 28px));
+  max-height: min(66vh, 620px);
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 8px;
+  padding: 10px 10px 8px;
   border: 1px solid rgba(0, 101, 162, 0.12);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 203, 47, 0.12), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 252, 0.96));
-  box-shadow: 0 28px 52px rgba(0, 70, 112, 0.18);
-  backdrop-filter: blur(16px);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 252, 0.97));
+  box-shadow: 0 24px 48px rgba(0, 70, 112, 0.16);
+  backdrop-filter: blur(12px);
 }
 
 .assistant-panel-header {
@@ -2486,7 +2500,7 @@ textarea:focus-visible {
 .assistant-panel-title p {
   margin: 4px 0 0;
   color: #5c7689;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
 }
 
 .assistant-avatar {
@@ -2508,52 +2522,53 @@ textarea:focus-visible {
 }
 
 .assistant-close {
-  padding: 8px 12px;
+  padding: 7px 10px;
   min-width: 0;
 }
 
-.assistant-suggestions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.assistant-chip {
-  padding: 8px 10px;
-  border: 1px solid #d7e3ec;
-  border-radius: 999px;
-  background: #f7fbfd;
-  color: #26445d;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-
-.assistant-chip:hover {
-  background: #ffffff;
-  transform: translateY(-1px);
-}
-
 .assistant-messages {
-  min-height: 180px;
-  max-height: 320px;
+  min-height: 208px;
+  max-height: 304px;
   overflow: auto;
   display: grid;
-  gap: 10px;
-  padding: 4px 2px 2px;
+  gap: 8px;
+  padding: 8px 6px 2px;
+  border-radius: 20px;
+  background: #eef2f7;
+  border: 1px solid rgba(214, 226, 235, 0.9);
+  align-content: start;
 }
 
 .assistant-message {
   position: relative;
-  max-width: 82%;
-  padding: 12px 15px;
-  border-radius: 22px;
-  box-shadow: 0 6px 16px rgba(21, 55, 80, 0.08);
+  width: fit-content;
+  max-width: 74%;
+  padding: 8px 12px;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(21, 55, 80, 0.06);
+  align-self: start;
+  animation: assistantMessageIn 0.22s ease-out;
 }
 
 .assistant-message p {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   line-height: 1.45;
+}
+
+.assistant-message-intro {
+  display: inline-flex;
+  justify-self: start;
+  width: auto;
+  max-width: max-content;
+  padding: 6px 10px;
+  border-radius: 16px;
+}
+
+.assistant-message-intro p {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 .typing-dots {
@@ -2624,17 +2639,17 @@ textarea:focus-visible {
 
 .assistant-form {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .assistant-form textarea {
-  min-height: 78px;
-  padding: 12px 13px;
-  border: 1px solid #cbd9e4;
-  border-radius: 16px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid #d6e2eb;
+  border-radius: 20px;
   background: #ffffff;
   color: var(--text);
-  resize: vertical;
+  resize: none;
 }
 
 .assistant-form-footer {
@@ -2649,6 +2664,17 @@ textarea:focus-visible {
   margin: 0;
   color: #5b7488;
   font-size: 0.82rem;
+}
+
+@keyframes assistantMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .mock-upload-button {
@@ -3108,14 +3134,20 @@ textarea:focus-visible {
   }
 
   .agent-stage {
-    min-height: auto;
+    min-height: calc(100vh - 96px);
+    height: calc(100vh - 96px);
   }
 
   .agent-overlay {
-    position: relative;
-    inset: auto;
-    padding: 0;
-    margin-top: -24px;
+    position: absolute;
+    inset: 0;
+    padding: 16px;
+    margin-top: 0;
+    align-items: center;
+  }
+
+  .agent-shell {
+    width: min(100%, 640px);
   }
 
   .agent-preview {
