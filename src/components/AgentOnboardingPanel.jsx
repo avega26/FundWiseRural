@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { askFundwiseAssistant } from '../aiHelper';
-import { countryOptions, defaultLanguage, getTranslation, regionsByCountry } from '../i18n/translations';
+import { countryOptions, defaultLanguage, getTranslation, languageOptions, regionsByCountry } from '../i18n/translations';
 
 const agentQuestions = [
   'What is your business called, and what kind of work do you do?',
@@ -78,8 +78,32 @@ function inferBusinessName(text) {
     return quoted[1].trim();
   }
 
+  const namedPattern = text.match(/(?:business|company|studio|farm|shop|brand)\s+(?:is|called|named)\s+([A-Z][A-Za-z0-9&'\- ]{1,40})/i);
+  if (namedPattern?.[1]) {
+    return namedPattern[1].trim().replace(/[.,]$/, '');
+  }
+
+  const weArePattern = text.match(/(?:we are|i run|i own|my business is)\s+([A-Z][A-Za-z0-9&'\- ]{1,40})/i);
+  if (weArePattern?.[1]) {
+    return weArePattern[1].trim().replace(/[.,]$/, '');
+  }
+
   const leading = text.match(/^([A-Z][A-Za-z&'\-]+(?:\s+[A-Z][A-Za-z&'\-]+){0,3})/);
   return leading?.[1]?.trim() || '';
+}
+
+function appendContext(currentValue, addition) {
+  const cleaned = addition?.trim().replace(/\s+/g, ' ');
+
+  if (!cleaned) {
+    return currentValue || '';
+  }
+
+  if (!currentValue) {
+    return cleaned.endsWith('.') ? cleaned : `${cleaned}.`;
+  }
+
+  return `${currentValue.trim()} ${cleaned.endsWith('.') ? cleaned : `${cleaned}.`}`;
 }
 
 function inferGoal(text) {
@@ -422,7 +446,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
 
     const timeoutId = window.setTimeout(() => {
       onComplete(draft);
-    }, 900);
+    }, 1650);
 
     return () => window.clearTimeout(timeoutId);
   }, [draft, isComplete, onComplete]);
@@ -479,7 +503,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       nextDraft.businessType = inferBusinessType(trimmed);
       nextDraft.businessName = draft.businessName || inferBusinessName(trimmed);
       nextDraft.agricultureSubType = draft.agricultureSubType || inferAgricultureSubType(trimmed);
-      nextDraft.additionalContext = trimmed;
+      nextDraft.additionalContext = appendContext('', trimmed);
       if (nextDraft.businessType === 'farm') {
         nextDraft.ruralArea = 'yes';
       }
@@ -490,9 +514,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       nextDraft.country = location.country || nextDraft.country;
       nextDraft.region = location.region || nextDraft.region;
       nextDraft.ruralArea = inferRuralArea(trimmed) || nextDraft.ruralArea;
-      nextDraft.additionalContext = [nextDraft.additionalContext, `Location note: ${trimmed}.`]
-        .filter(Boolean)
-        .join(' ');
+      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
     }
 
     if (currentQuestionIndex === 2) {
@@ -502,9 +524,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
         ...nextDraft.specialTags,
         ...inferSpecialTags(trimmed),
       ]));
-      nextDraft.additionalContext = [nextDraft.additionalContext, `Business profile note: ${trimmed}.`]
-        .filter(Boolean)
-        .join(' ');
+      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
     }
 
     if (currentQuestionIndex === 3) {
@@ -512,7 +532,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       nextDraft.mainGoal = inferredGoal;
       nextDraft.otherMainGoal = inferredGoal === 'other' ? trimmed : '';
       nextDraft.grantScopePreference = inferGrantScope(trimmed) || nextDraft.grantScopePreference;
-      nextDraft.additionalContext = [nextDraft.additionalContext, trimmed].filter(Boolean).join(' ');
+      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
     }
 
     nextDraft.preferredLanguage = language || defaultLanguage;
@@ -524,15 +544,13 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
     ];
 
     const reachedQuestionLimit = currentQuestionIndex >= agentQuestions.length - 1;
-    const nextSatisfied = Boolean(nextDraft.businessType && nextDraft.country && nextDraft.mainGoal);
-    const shouldComplete = reachedQuestionLimit || (currentQuestionIndex >= 2 && nextSatisfied);
 
-    if (shouldComplete || (currentQuestionIndex === 3 && nextSatisfied)) {
+    if (reachedQuestionLimit) {
       const summaryParts = buildSummaryParts(nextDraft, copy);
       const friendlyAck = getFriendlyAck(currentQuestionIndex, nextDraft, trimmed, copy);
       const fallbackFinalReply = summaryParts.length
-        ? `${friendlyAck} I’ve prefilled ${summaryParts.join(', ')} and I’m opening the full form so you can review everything before I get too confident.`
-        : `${friendlyAck} I have enough to start the full intake form, so I’m opening it with a few prefills.`;
+        ? `${friendlyAck} I’ve prefilled ${summaryParts.join(', ')}, and I’m opening the full form so you can review everything calmly before we search.`
+        : `${friendlyAck} I have enough to open the full intake form, so I’m handing it over with a few smart prefills.`;
       setMessages(nextMessages);
       setInputValue('');
       setIsTyping(true);
@@ -660,6 +678,25 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             <p className="panel-copy">
               Seraphina floats above the full intake, asks a few quick setup questions, and then hands you into the full form with smart prefills already waiting.
             </p>
+            <div className="agent-language-row">
+              <label htmlFor="agentPreferredLanguage">Preferred language</label>
+              <select
+                id="agentPreferredLanguage"
+                value={draft.preferredLanguage}
+                onChange={(event) => {
+                  const nextLanguage = event.target.value || defaultLanguage;
+                  setDraft((current) => ({ ...current, preferredLanguage: nextLanguage }));
+                  onLanguageChange?.(nextLanguage);
+                }}
+                disabled={isTyping}
+              >
+                {languageOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

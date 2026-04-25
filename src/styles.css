@@ -294,6 +294,10 @@ textarea:focus-visible {
   flex: 1 1 320px;
 }
 
+.brand-dashboard-button {
+  margin-left: auto;
+}
+
 .title-row {
   display: flex;
   align-items: center;
@@ -659,6 +663,28 @@ textarea:focus-visible {
   justify-content: space-between;
   gap: 12px 16px;
   flex-wrap: wrap;
+}
+
+.agent-language-row {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  max-width: 240px;
+}
+
+.agent-language-row label {
+  color: #214762;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.agent-language-row select {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #b9cddb;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfeff, #f8fbfd);
+  color: var(--text);
 }
 
 .agent-input-hint {

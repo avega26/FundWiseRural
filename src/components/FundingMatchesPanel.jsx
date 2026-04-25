@@ -170,6 +170,7 @@ function FundingMatchesPanel({
   onSaveRecommendation,
   onOpenDashboard,
   canSaveResults = false,
+  showMockApplicationOption = false,
   language,
   businessName,
   submittedProfile,
@@ -191,7 +192,8 @@ function FundingMatchesPanel({
     copy,
   );
   const showEmptyState = hasSubmitted && !isLoading && !errorMessage && results.length === 0;
-  const topMockApplicationCandidate = results[0]?.supportsMockApplication ? results[0] : null;
+  const topMockApplicationCandidate =
+    showMockApplicationOption && results[0]?.supportsMockApplication ? results[0] : null;
   const completionRate = metrics.pageVisits
     ? Math.round((metrics.successfulSearches / metrics.pageVisits) * 100)
     : 0;
@@ -665,8 +667,11 @@ function FundingMatchesPanel({
               <button
                 type="button"
                 className="official-link summary-action-btn action-button"
-                disabled={!canSaveResults}
-                onClick={() => handleSaveRoute(results[0])}
+                onClick={() =>
+                  canSaveResults
+                    ? handleSaveRoute(results[0])
+                    : onOpenDashboard?.('applicant')
+                }
               >
                 {!canSaveResults
                   ? copy.loginToSave || 'Login to save'
@@ -739,8 +744,11 @@ function FundingMatchesPanel({
                   <button
                     type="button"
                     className="secondary-button secondary-button-quiet"
-                    disabled={!canSaveResults}
-                    onClick={() => handleSaveRoute(item)}
+                    onClick={() =>
+                      canSaveResults
+                        ? handleSaveRoute(item)
+                        : onOpenDashboard?.('applicant')
+                    }
                   >
                     {!canSaveResults
                       ? copy.loginToSave || 'Login to save'
@@ -811,8 +819,11 @@ function FundingMatchesPanel({
                       <button
                         type="button"
                         className="secondary-button secondary-button-quiet"
-                        disabled={!canSaveResults}
-                        onClick={() => handleSaveRoute(grant)}
+                        onClick={() =>
+                          canSaveResults
+                            ? handleSaveRoute(grant)
+                            : onOpenDashboard?.('applicant')
+                        }
                       >
                         {!canSaveResults
                           ? copy.loginToSave || 'Login to save'
@@ -845,8 +856,11 @@ function FundingMatchesPanel({
                   <button
                     type="button"
                     className="secondary-button"
-                    disabled={!canSaveResults}
-                    onClick={() => handleSaveRoute(activeResult)}
+                    onClick={() =>
+                      canSaveResults
+                        ? handleSaveRoute(activeResult)
+                        : onOpenDashboard?.('applicant')
+                    }
                   >
                     {!canSaveResults
                       ? copy.loginToSave || 'Login to save'

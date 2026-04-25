@@ -196,6 +196,7 @@ function App() {
   const [activeSavedRecommendationId, setActiveSavedRecommendationId] = useState(null);
   const [dashboardRole, setDashboardRole] = useState('applicant');
   const [hasApplicantSession, setHasApplicantSession] = useState(false);
+  const [showMockApplicationOption, setShowMockApplicationOption] = useState(false);
   const isDeveloperMode = userMode === 'developer';
   const seededApplication = useMemo(() => buildSeedApplication(), []);
   const dashboardApplications = useMemo(() => {
@@ -259,6 +260,7 @@ function App() {
     setResults([]);
     setRecommendationsError('');
     setSelectedMockRecommendation(null);
+    setShowMockApplicationOption(Boolean(openMockApplication));
     setCurrentScreen('results');
 
     if (candidatePrograms.length === 0) {
@@ -275,10 +277,6 @@ function App() {
 
       if (aiResult.recommendations.length > 0) {
         updateMetrics('successfulSearches');
-        if (openMockApplication) {
-          setSelectedMockRecommendation(aiResult.recommendations[0]);
-          setCurrentScreen('mockApplication');
-        }
       }
     } catch (error) {
       setRecommendationsError(
@@ -325,6 +323,7 @@ function App() {
     setActiveSavedRecommendationId(null);
     setDashboardRole('applicant');
     setHasApplicantSession(false);
+    setShowMockApplicationOption(false);
     setRecommendationsError('');
     setIsGeneratingRecommendations(false);
   };
@@ -610,12 +609,22 @@ function App() {
           </main>
         ) : currentScreen === 'about' ? (
           <main id="main-content" className="screen-layout">
-            <BrandBar language={currentLanguage} compact />
+            <BrandBar
+              language={currentLanguage}
+              compact
+              showDashboardAccess={hasApplicantSession}
+              onOpenDashboard={() => handleOpenDashboardFromHomepage('applicant')}
+            />
             <AboutPanel onBack={handleBackFromAbout} />
           </main>
         ) : currentScreen === 'results' ? (
           <main id="main-content" className="screen-layout">
-            <BrandBar language={currentLanguage} compact />
+            <BrandBar
+              language={currentLanguage}
+              compact
+              showDashboardAccess={hasApplicantSession}
+              onOpenDashboard={() => handleOpenDashboardFromHomepage('applicant')}
+            />
             <FundingMatchesPanel
               results={results}
               hasSubmitted={submittedProfile !== null}
@@ -628,6 +637,7 @@ function App() {
               metrics={metrics}
               isDeveloperMode={isDeveloperMode}
               canSaveResults={hasApplicantSession}
+              showMockApplicationOption={showMockApplicationOption}
               onApplicationClick={handleApplicationClick}
               onHelpfulVote={handleHelpfulVote}
               onResetMetrics={handleResetMetrics}
@@ -639,7 +649,12 @@ function App() {
           </main>
         ) : canShowMockApplication ? (
           <main id="main-content" className="screen-layout">
-            <BrandBar language={currentLanguage} compact />
+            <BrandBar
+              language={currentLanguage}
+              compact
+              showDashboardAccess={hasApplicantSession}
+              onOpenDashboard={() => handleOpenDashboardFromHomepage('applicant')}
+            />
             <MockApplicationPanel
               language={currentLanguage}
               submittedProfile={submittedProfile}
@@ -654,7 +669,12 @@ function App() {
           </main>
         ) : currentScreen === 'dashboard' ? (
           <main id="main-content" className="screen-layout">
-            <BrandBar language={currentLanguage} compact />
+            <BrandBar
+              language={currentLanguage}
+              compact
+              showDashboardAccess={hasApplicantSession}
+              onOpenDashboard={() => handleOpenDashboardFromHomepage('applicant')}
+            />
             <ApplicationDashboardPanel
               language={currentLanguage}
               applications={dashboardApplications}
@@ -674,7 +694,12 @@ function App() {
           </main>
         ) : (
           <main id="main-content" className="screen-layout">
-            <BrandBar language={currentLanguage} compact />
+            <BrandBar
+              language={currentLanguage}
+              compact
+              showDashboardAccess={hasApplicantSession}
+              onOpenDashboard={() => handleOpenDashboardFromHomepage('applicant')}
+            />
             <FundingMatchesPanel
               results={results}
               hasSubmitted={submittedProfile !== null}
@@ -686,10 +711,14 @@ function App() {
               profileReview={profileReview}
               metrics={metrics}
               isDeveloperMode={isDeveloperMode}
+              canSaveResults={hasApplicantSession}
+              showMockApplicationOption={showMockApplicationOption}
               onApplicationClick={handleApplicationClick}
               onHelpfulVote={handleHelpfulVote}
               onResetMetrics={handleResetMetrics}
               onOpenMockApplication={handleOpenMockApplication}
+              onSaveRecommendation={handleSaveRecommendation}
+              onOpenDashboard={handleOpenDashboardFromHomepage}
               onStartOver={handleStartOver}
             />
           </main>

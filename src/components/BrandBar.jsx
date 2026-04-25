@@ -1,6 +1,6 @@
 import { getTranslation } from '../i18n/translations';
 
-function BrandBar({ language, compact = false }) {
+function BrandBar({ language, compact = false, showDashboardAccess = false, onOpenDashboard }) {
   const copy = getTranslation(language);
 
   return (
@@ -35,6 +35,15 @@ function BrandBar({ language, compact = false }) {
           </div>
           <p className="subtitle">{copy.subtitle}</p>
         </div>
+        {compact && showDashboardAccess && (
+          <button
+            type="button"
+            className="secondary-button secondary-button-quiet brand-dashboard-button"
+            onClick={onOpenDashboard}
+          >
+            Dashboard
+          </button>
+        )}
       </div>
     </div>
   );
