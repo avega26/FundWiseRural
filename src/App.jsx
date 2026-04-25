@@ -423,8 +423,16 @@ function App() {
     if (role === 'applicant') {
       setHasApplicantSession(true);
     }
+    if (role === 'agent') {
+      setApplications((current) => {
+        const hasSeed = current.some((application) => application.id === seededApplication.id);
+        return hasSeed ? current : [seededApplication, ...current];
+      });
+    }
     setDashboardRole(role);
-    setActiveApplicationId((current) => current || dashboardApplications[0]?.id || null);
+    setActiveApplicationId((current) =>
+      current || (role === 'agent' ? seededApplication.id : dashboardApplications[0]?.id || null),
+    );
     setCurrentScreen('dashboard');
   };
 
