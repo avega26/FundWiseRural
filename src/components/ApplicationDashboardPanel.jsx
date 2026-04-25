@@ -423,6 +423,7 @@ function ApplicationDashboardPanel({
   activeApplicationId,
   activeSavedRecommendationId,
   dashboardRole,
+  isDeveloperMode = false,
   onDashboardRoleChange,
   onSelectApplication,
   onSelectSavedRecommendation,
@@ -501,22 +502,24 @@ function ApplicationDashboardPanel({
         </div>
       </div>
 
-      <div className="dashboard-role-toggle">
-        <button
-          type="button"
-          className={`mode-toggle-button${dashboardRole === 'applicant' ? ' active' : ''}`}
-          onClick={() => onDashboardRoleChange('applicant')}
-        >
-          End-user view
-        </button>
-        <button
-          type="button"
-          className={`mode-toggle-button${dashboardRole === 'agent' ? ' active' : ''}`}
-          onClick={() => onDashboardRoleChange('agent')}
-        >
-          Officer view
-        </button>
-      </div>
+      {isDeveloperMode && (
+        <div className="dashboard-role-toggle">
+          <button
+            type="button"
+            className={`mode-toggle-button${dashboardRole === 'applicant' ? ' active' : ''}`}
+            onClick={() => onDashboardRoleChange('applicant')}
+          >
+            End-user view
+          </button>
+          <button
+            type="button"
+            className={`mode-toggle-button${dashboardRole === 'agent' ? ' active' : ''}`}
+            onClick={() => onDashboardRoleChange('agent')}
+          >
+            Officer view
+          </button>
+        </div>
+      )}
 
       <div className="dashboard-layout">
         <aside className="dashboard-sidebar">

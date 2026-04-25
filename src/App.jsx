@@ -716,6 +716,7 @@ function App() {
               activeApplicationId={activeApplicationId}
               activeSavedRecommendationId={activeSavedRecommendationId}
               dashboardRole={dashboardRole}
+              isDeveloperMode={isDeveloperMode}
               onDashboardRoleChange={setDashboardRole}
               onSelectApplication={handleSelectApplication}
               onSelectSavedRecommendation={handleSelectSavedRecommendation}
