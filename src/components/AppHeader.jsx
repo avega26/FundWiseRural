@@ -66,11 +66,11 @@ function AppHeader({ language, onOpenAbout, onStayOnIntake, onApplicantLogin, on
             <div className="hero-modal-form">
               <div className="form-field">
                 <label htmlFor="heroLoginEmail">Email</label>
-                <input id="heroLoginEmail" type="email" placeholder="name@example.com" />
+                <input id="heroLoginEmail" type="email" defaultValue="johndoe@abce.com" />
               </div>
               <div className="form-field">
                 <label htmlFor="heroLoginPassword">Password</label>
-                <input id="heroLoginPassword" type="password" placeholder="Enter password" />
+                <input id="heroLoginPassword" type="password" defaultValue="12345" />
               </div>
             </div>
             <div className="hero-login-actions">

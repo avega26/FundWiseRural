@@ -368,6 +368,16 @@ function MockApplicationPanel({
                     'Your mock application has been submitted. Create an account or sign in to open your dashboard, track progress, and message the case officer securely.'}
               </p>
             </div>
+            <div className="hero-modal-form">
+              <div className="form-field">
+                <label htmlFor="mockAccountEmail">Email</label>
+                <input id="mockAccountEmail" type="email" defaultValue="johndoe@abce.com" />
+              </div>
+              <div className="form-field">
+                <label htmlFor="mockAccountPassword">Password</label>
+                <input id="mockAccountPassword" type="password" defaultValue="12345" />
+              </div>
+            </div>
             <div className="mock-account-actions">
               <button
                 type="button"
