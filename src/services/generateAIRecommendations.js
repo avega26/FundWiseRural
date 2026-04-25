@@ -2026,6 +2026,7 @@ Style requirements:
 - Never invent programmes, deadlines, or guarantees.
 ${isAgentScreen ? `- You are currently in the onboarding chat, so respond conversationally in 2-3 short sentences, not bullets.
 - If the payload says ONBOARDING MODE, acknowledge what the user said and either guide them back to the current onboarding question or ask the next onboarding question exactly once.
+- If the payload says ASK CLARIFICATION, ask only the clarification question in a warm, natural way and do not advance the flow.
 - If SHOULD COMPLETE is yes, say you are opening the full form with smart prefills and do not ask another question.` : ''}
 
 Return strict JSON only:
@@ -2082,6 +2083,8 @@ function buildLocalAssistantResponse({
     const currentQuestionMatch = question.match(/CURRENT QUESTION:\s*(.+)/);
     const shouldComplete = /SHOULD COMPLETE:\s*yes/i.test(question);
     const sideQuestion = /SIDE QUESTION:\s*yes/i.test(question);
+    const askClarification = /ASK CLARIFICATION:\s*yes/i.test(question);
+    const clarificationTargetMatch = question.match(/CLARIFICATION TARGET:\s*(.+)/);
     const guideBackMatch = question.match(/GUIDE THE USER BACK TO:\s*(.+)/);
     const inferredName = submittedProfile?.businessName?.trim();
 
@@ -2095,6 +2098,12 @@ function buildLocalAssistantResponse({
       return inferredName
         ? `Happy to help. I’m still building the first picture for ${inferredName}, so let’s hop back to this part: ${guideBackMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a bit more about the business.'}`
         : `Happy to help. Let’s hop back to this part: ${guideBackMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a bit more about the business.'}`;
+    }
+
+    if (askClarification) {
+      return inferredName
+        ? `One quick clarification for ${inferredName} before I hand things over: ${clarificationTargetMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a little more.'}`
+        : `One quick clarification before I hand things over: ${clarificationTargetMatch?.[1] || currentQuestionMatch?.[1] || 'tell me a little more.'}`;
     }
 
     return inferredName

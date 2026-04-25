@@ -168,6 +168,7 @@ function FundingMatchesPanel({
   onResetMetrics,
   onOpenMockApplication,
   onSaveRecommendation,
+  onEnableSaveLogin,
   onOpenDashboard,
   canSaveResults = false,
   showMockApplicationOption = false,
@@ -184,6 +185,7 @@ function FundingMatchesPanel({
   const [draftSupportById, setDraftSupportById] = useState({});
   const [helpfulVote, setHelpfulVote] = useState('');
   const [savedRecommendationIds, setSavedRecommendationIds] = useState([]);
+  const [showSaveLoginModal, setShowSaveLoginModal] = useState(false);
   const copy = getTranslation(language);
   const additionalGeneralGrants = buildGeneralGrantMatches(
     generalGrantOptions,
@@ -327,6 +329,7 @@ function FundingMatchesPanel({
 
   const handleSaveRoute = (item) => {
     if (!canSaveResults) {
+      setShowSaveLoginModal(true);
       return null;
     }
 
@@ -335,6 +338,17 @@ function FundingMatchesPanel({
       current.includes(item.id) ? current : [...current, item.id],
     );
     return savedItem;
+  };
+
+  const handleResultsLoginStay = () => {
+    onEnableSaveLogin?.();
+    setShowSaveLoginModal(false);
+  };
+
+  const handleResultsLoginDashboard = () => {
+    onEnableSaveLogin?.();
+    setShowSaveLoginModal(false);
+    onOpenDashboard?.('applicant');
   };
 
   const hasText = (value) => typeof value === 'string' && value.trim().length > 0;
@@ -667,11 +681,7 @@ function FundingMatchesPanel({
               <button
                 type="button"
                 className="official-link summary-action-btn action-button"
-                onClick={() =>
-                  canSaveResults
-                    ? handleSaveRoute(results[0])
-                    : onOpenDashboard?.('applicant')
-                }
+                onClick={() => handleSaveRoute(results[0])}
               >
                 {!canSaveResults
                   ? copy.loginToSave || 'Login to save'
@@ -744,11 +754,7 @@ function FundingMatchesPanel({
                   <button
                     type="button"
                     className="secondary-button secondary-button-quiet"
-                    onClick={() =>
-                      canSaveResults
-                        ? handleSaveRoute(item)
-                        : onOpenDashboard?.('applicant')
-                    }
+                    onClick={() => handleSaveRoute(item)}
                   >
                     {!canSaveResults
                       ? copy.loginToSave || 'Login to save'
@@ -819,11 +825,7 @@ function FundingMatchesPanel({
                       <button
                         type="button"
                         className="secondary-button secondary-button-quiet"
-                        onClick={() =>
-                          canSaveResults
-                            ? handleSaveRoute(grant)
-                            : onOpenDashboard?.('applicant')
-                        }
+                        onClick={() => handleSaveRoute(grant)}
                       >
                         {!canSaveResults
                           ? copy.loginToSave || 'Login to save'
@@ -856,11 +858,7 @@ function FundingMatchesPanel({
                   <button
                     type="button"
                     className="secondary-button"
-                    onClick={() =>
-                      canSaveResults
-                        ? handleSaveRoute(activeResult)
-                        : onOpenDashboard?.('applicant')
-                    }
+                    onClick={() => handleSaveRoute(activeResult)}
                   >
                     {!canSaveResults
                       ? copy.loginToSave || 'Login to save'
@@ -987,6 +985,57 @@ function FundingMatchesPanel({
                 {helpfulVote === 'yes' ? copy.helpfulThanksYes : copy.helpfulThanksNo}
               </p>
             )}
+          </div>
+        </div>
+      )}
+      {showSaveLoginModal && (
+        <div className="hero-modal" role="dialog" aria-modal="true" aria-labelledby="results-save-login-title">
+          <button
+            type="button"
+            className="hero-modal-backdrop"
+            aria-label="Close save login"
+            onClick={() => setShowSaveLoginModal(false)}
+          />
+          <div className="hero-modal-card">
+            <button
+              type="button"
+              className="hero-modal-close"
+              aria-label="Close save login"
+              onClick={() => setShowSaveLoginModal(false)}
+            >
+              x
+            </button>
+            <p className="summary-kicker">Save funding routes</p>
+            <h3 id="results-save-login-title">Login or create an account to save results</h3>
+            <p className="panel-copy">
+              This prototype does not store real credentials yet, but this step shows where applicants would sign in before saving multiple routes and reopening them later from the dashboard.
+            </p>
+            <div className="hero-modal-form">
+              <div className="form-field">
+                <label htmlFor="resultsSaveLoginEmail">Email</label>
+                <input id="resultsSaveLoginEmail" type="email" defaultValue="johndoe@abce.com" />
+              </div>
+              <div className="form-field">
+                <label htmlFor="resultsSaveLoginPassword">Password</label>
+                <input id="resultsSaveLoginPassword" type="password" defaultValue="12345" />
+              </div>
+            </div>
+            <div className="hero-login-actions">
+              <button
+                type="button"
+                className="secondary-button secondary-button-quiet"
+                onClick={handleResultsLoginStay}
+              >
+                Stay on results
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleResultsLoginDashboard}
+              >
+                Go to dashboard
+              </button>
+            </div>
           </div>
         </div>
       )}

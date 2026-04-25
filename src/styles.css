@@ -98,6 +98,39 @@ textarea:focus-visible {
   background-position: center top;
 }
 
+.low-bandwidth-mode {
+  background: #eef4f8;
+}
+
+.low-bandwidth-mode .page-frame::before,
+.low-bandwidth-mode .hero::after,
+.low-bandwidth-mode .agent-preview::after {
+  display: none;
+}
+
+.low-bandwidth-mode .hero,
+.low-bandwidth-mode .brand-shell-compact,
+.low-bandwidth-mode .agent-card,
+.low-bandwidth-mode .hero-modal-card,
+.low-bandwidth-mode .about-card,
+.low-bandwidth-mode .hero-login-card {
+  backdrop-filter: none;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 70, 112, 0.08);
+}
+
+.low-bandwidth-mode .agent-preview {
+  filter: none;
+  opacity: 0.84;
+  transform: none;
+}
+
+.low-bandwidth-mode .agent-shell,
+.low-bandwidth-mode .agent-card,
+.low-bandwidth-mode .agent-bot {
+  animation: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

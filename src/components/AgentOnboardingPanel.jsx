@@ -78,18 +78,32 @@ function inferBusinessName(text) {
     return quoted[1].trim();
   }
 
-  const namedPattern = text.match(/(?:business|company|studio|farm|shop|brand)\s+(?:is|called|named)\s+([A-Z][A-Za-z0-9&'\- ]{1,40})/i);
+  const namedPattern = text.match(/(?:business|company|studio|farm|shop|brand)\s+(?:is|called|named)\s+([^,.!\n]{2,60})/i);
   if (namedPattern?.[1]) {
-    return namedPattern[1].trim().replace(/[.,]$/, '');
+    return cleanBusinessName(namedPattern[1]);
   }
 
-  const weArePattern = text.match(/(?:we are|i run|i own|my business is)\s+([A-Z][A-Za-z0-9&'\- ]{1,40})/i);
+  const weArePattern = text.match(/(?:we are|i run|i own|my business is|i manage|our business is|this is)\s+([^,.!\n]{2,60})/i);
   if (weArePattern?.[1]) {
-    return weArePattern[1].trim().replace(/[.,]$/, '');
+    return cleanBusinessName(weArePattern[1]);
   }
 
-  const leading = text.match(/^([A-Z][A-Za-z&'\-]+(?:\s+[A-Z][A-Za-z&'\-]+){0,3})/);
-  return leading?.[1]?.trim() || '';
+  const callPattern = text.match(/(?:called|named)\s+([^,.!\n]{2,60})/i);
+  if (callPattern?.[1]) {
+    return cleanBusinessName(callPattern[1]);
+  }
+
+  const leading = text.match(/^([A-Z][A-Za-z0-9&'\-]+(?:\s+[A-Z][A-Za-z0-9&'\-]+){0,4})/);
+  return cleanBusinessName(leading?.[1] || '');
+}
+
+function cleanBusinessName(value = '') {
+  return value
+    .replace(/^(a|an|the)\s+/i, '')
+    .replace(/\b(and|that|which)\b.*$/i, '')
+    .replace(/\b(a|an|the)\s+(farm|business|company|studio|shop)\b.*$/i, '')
+    .replace(/[.,:;!?]+$/g, '')
+    .trim();
 }
 
 function appendContext(currentValue, addition) {
@@ -147,7 +161,7 @@ function inferCountryAndRegion(text) {
   let region = '';
 
   for (const option of countryOptions) {
-    if (normalized.includes(option.value) || normalized.includes(option.labelKey)) {
+    if (normalized.includes(option.value) || normalized.includes(normalizeComparable(option.labelKey))) {
       country = option.value;
       break;
     }
@@ -212,6 +226,16 @@ function inferBusinessSize(text) {
 
 function inferYearsInOperation(text) {
   const normalized = normalizeComparable(text);
+  const yearNumberMatch = normalized.match(/(\d+)\s*(?:years?|yrs?)/);
+
+  if (yearNumberMatch) {
+    const years = Number(yearNumberMatch[1]);
+    if (Number.isFinite(years)) {
+      if (years <= 1) return '0-1';
+      if (years <= 5) return '2-5';
+      return '6+';
+    }
+  }
 
   if (/(new|startup|started this year|less than 1 year|under 1 year|0-1)/.test(normalized)) {
     return '0-1';
@@ -239,6 +263,152 @@ function inferSpecialTags(text) {
   if (/(innovative|innovation|new technology|novel)/.test(normalized)) tags.push('innovative');
 
   return tags;
+}
+
+function answerLooksLikeProfileContent(text, questionIndex) {
+  const normalized = normalizeComparable(text);
+
+  if (!normalized) {
+    return false;
+  }
+
+  const generalSignals = [
+    inferBusinessType(text),
+    inferBusinessName(text),
+    inferCountryAndRegion(text).country,
+    inferCountryAndRegion(text).region,
+    inferRuralArea(text),
+    inferBusinessSize(text),
+    inferYearsInOperation(text),
+    inferGoal(text),
+    inferGrantScope(text),
+    ...inferSpecialTags(text),
+  ].filter(Boolean);
+
+  if (generalSignals.length > 0) {
+    return true;
+  }
+
+  if (questionIndex === 0 && /(we|i|our|my)\s/.test(normalized)) {
+    return true;
+  }
+
+  if (questionIndex === 1 && /(in|based|located|from)\s/.test(normalized)) {
+    return true;
+  }
+
+  if (questionIndex === 2 && /(\d+|micro|small|medium|years?|owned|innovative|sustainable|cooperative)/.test(normalized)) {
+    return true;
+  }
+
+  if (questionIndex === 3 && /(want|need|looking|hoping|fund|improve|upgrade|expand|digital|equipment|regional|general)/.test(normalized)) {
+    return true;
+  }
+
+  return false;
+}
+
+function buildRefinedBusinessContext(draft, answers, copy) {
+  const sentences = [];
+  const businessName = draft.businessName?.trim();
+  const businessTypeLabel = copy.businessTypes?.[draft.businessType] || draft.businessType || 'business';
+  const agricultureLabel = copy.agricultureSubTypes?.[draft.agricultureSubType] || '';
+  const sizeLabel = copy.businessSizes?.[draft.businessSize] || draft.businessSize || '';
+  const countryLabel = copy.countries?.[draft.country] || draft.country || '';
+  const regionLabel =
+    regionsByCountry[draft.country || '']?.find((entry) => entry.value === draft.region)?.label || draft.region || '';
+  const goalLabel =
+    draft.mainGoal === 'other'
+      ? draft.otherMainGoal?.trim()
+      : copy.goals?.[draft.mainGoal] || draft.otherMainGoal?.trim() || '';
+  const tagLabels = (draft.specialTags || []).map((tag) => copy.tags?.[tag]).filter(Boolean);
+  const answersText = answers.join(' ').replace(/\s+/g, ' ').trim();
+
+  if (businessName || businessTypeLabel) {
+    const subject = businessName || 'The business';
+    const typePhrase = agricultureLabel ? `${businessTypeLabel} focused on ${agricultureLabel}` : businessTypeLabel;
+    const sizePhrase = sizeLabel ? `${sizeLabel} ` : '';
+    sentences.push(`${subject} is a ${sizePhrase}${typePhrase}`.replace(/\s+/g, ' ').trim() + '.');
+  }
+
+  if (countryLabel || regionLabel || draft.ruralArea) {
+    const locationBits = [];
+    if (regionLabel) locationBits.push(regionLabel);
+    if (countryLabel) locationBits.push(countryLabel);
+    const ruralPhrase =
+      draft.ruralArea === 'yes'
+        ? 'It operates in a rural setting.'
+        : draft.ruralArea === 'no'
+          ? 'It is not primarily based in a rural setting.'
+          : '';
+
+    if (locationBits.length > 0) {
+      sentences.push(`The business is based in ${locationBits.join(', ')}.`);
+    }
+
+    if (ruralPhrase) {
+      sentences.push(ruralPhrase);
+    }
+  }
+
+  if (draft.yearsInOperation) {
+    const yearsPhrase =
+      draft.yearsInOperation === '0-1'
+        ? 'It is a relatively new business.'
+        : draft.yearsInOperation === '2-5'
+          ? 'It has been operating for a few years.'
+          : 'It is an established business with several years of activity.';
+    sentences.push(yearsPhrase);
+  }
+
+  if (goalLabel) {
+    const scopePhrase =
+      draft.grantScopePreference === 'regionalOnly'
+        ? 'The user wants to focus on regional routes.'
+        : draft.grantScopePreference === 'regionalAndGeneral'
+          ? 'The user is open to both regional and broader EU-wide opportunities.'
+          : '';
+    sentences.push(`The current funding priority is ${goalLabel}.`);
+    if (scopePhrase) {
+      sentences.push(scopePhrase);
+    }
+  }
+
+  if (tagLabels.length > 0) {
+    sentences.push(`Relevant profile qualifiers include ${tagLabels.join(', ')}.`);
+  }
+
+  if (answersText) {
+    const lowercaseAnswers = answersText.toLowerCase();
+    if (/(irrigation|water system|drip)/.test(lowercaseAnswers) && !sentences.join(' ').toLowerCase().includes('irrigation')) {
+      sentences.push('The user mentioned irrigation or water-system improvements as part of the project.');
+    }
+    if (/(website|booking|software|digital|ecommerce|online)/.test(lowercaseAnswers) && !sentences.join(' ').toLowerCase().includes('digital')) {
+      sentences.push('The project may also include a digital or online-improvement component.');
+    }
+  }
+
+  return Array.from(new Set(sentences.map((sentence) => sentence.trim()).filter(Boolean))).join(' ');
+}
+
+function getClarificationPrompt(questionIndex, draft) {
+  if (questionIndex === 0 && (!draft.businessName || !draft.businessType)) {
+    return 'I want to make sure I capture the business correctly. What is the business called, and is it closer to a farm, rural tourism, food production, retail, manufacturing, or a service business?';
+  }
+
+  if (questionIndex === 1 && !draft.country && !draft.region) {
+    return 'I still need the location pinned down. Which country and region is the business based in, and is the activity mainly rural or not?';
+  }
+
+  if (questionIndex === 2 && !draft.businessSize && !draft.yearsInOperation && draft.specialTags.length === 0) {
+    return 'I still need a rough sense of scale. Is the business micro, small, or medium, how long has it been operating, and do any profile tags fit?';
+  }
+
+  if (questionIndex === 3 && !draft.mainGoal && !draft.otherMainGoal) {
+    return 'Before I hand this over, what is the main thing you want funding for right now?';
+  }
+
+  return '';
 }
 
 function buildSummaryParts(draft, copy) {
@@ -433,6 +603,8 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
   const [inputValue, setInputValue] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [clarificationCounts, setClarificationCounts] = useState({});
+  const [answerHistory, setAnswerHistory] = useState([]);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -463,7 +635,10 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       return;
     }
 
-    const sideQuestionResponse = getSideQuestionResponse(trimmed, currentQuestionIndex);
+    const sideQuestionResponse =
+      !answerLooksLikeProfileContent(trimmed, currentQuestionIndex)
+        ? getSideQuestionResponse(trimmed, currentQuestionIndex)
+        : '';
 
     if (sideQuestionResponse) {
       setMessages((current) => [...current, { role: 'user', text: trimmed }]);
@@ -499,6 +674,8 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
 
     const nextDraft = { ...draft };
 
+    const nextAnswerHistory = [...answerHistory, trimmed];
+
     if (currentQuestionIndex === 0) {
       nextDraft.businessType = inferBusinessType(trimmed);
       nextDraft.businessName = draft.businessName || inferBusinessName(trimmed);
@@ -529,19 +706,61 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
 
     if (currentQuestionIndex === 3) {
       const inferredGoal = inferGoal(trimmed);
-      nextDraft.mainGoal = inferredGoal;
+      nextDraft.mainGoal = inferredGoal || nextDraft.mainGoal;
       nextDraft.otherMainGoal = inferredGoal === 'other' ? trimmed : '';
       nextDraft.grantScopePreference = inferGrantScope(trimmed) || nextDraft.grantScopePreference;
       nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
     }
 
     nextDraft.preferredLanguage = language || defaultLanguage;
+    nextDraft.additionalContext = buildRefinedBusinessContext(nextDraft, nextAnswerHistory, copy);
     setDraft(nextDraft);
+    setAnswerHistory(nextAnswerHistory);
 
     const nextMessages = [
       ...messages,
       { role: 'user', text: trimmed },
     ];
+
+    const clarificationPrompt = getClarificationPrompt(currentQuestionIndex, nextDraft);
+    const clarificationCount = clarificationCounts[currentQuestionIndex] || 0;
+
+    if (clarificationPrompt && clarificationCount < 1) {
+      setMessages(nextMessages);
+      setInputValue('');
+      setClarificationCounts((current) => ({ ...current, [currentQuestionIndex]: clarificationCount + 1 }));
+      setIsTyping(true);
+      try {
+        const response = await askFundwiseAssistant({
+          question: [
+            buildAgentPrompt({
+              answer: trimmed,
+              currentQuestionIndex,
+              nextQuestionIndex: currentQuestionIndex,
+              nextDraft,
+              shouldComplete: false,
+            }),
+            'ASK CLARIFICATION: yes',
+            `CLARIFICATION TARGET: ${clarificationPrompt}`,
+          ].join('\n'),
+          language,
+          submittedProfile: nextDraft,
+          profileReview: null,
+          results: [],
+          currentScreen: 'agent',
+        });
+
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', text: response.answer || clarificationPrompt },
+        ]);
+      } catch {
+        setMessages((current) => [...current, { role: 'assistant', text: clarificationPrompt }]);
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
 
     const reachedQuestionLimit = currentQuestionIndex >= agentQuestions.length - 1;
 
@@ -589,6 +808,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
     const fallbackReply = [friendlyAck, nextLead, agentQuestions[nextQuestionIndex]].filter(Boolean).join(' ');
     setMessages(nextMessages);
     setCurrentQuestionIndex(nextQuestionIndex);
+    setClarificationCounts((current) => ({ ...current, [currentQuestionIndex]: 0 }));
     setInputValue('');
     setIsTyping(true);
     try {

@@ -197,6 +197,7 @@ function App() {
   const [dashboardRole, setDashboardRole] = useState('applicant');
   const [hasApplicantSession, setHasApplicantSession] = useState(false);
   const [showMockApplicationOption, setShowMockApplicationOption] = useState(false);
+  const [isLowBandwidthMode, setIsLowBandwidthMode] = useState(false);
   const isDeveloperMode = userMode === 'developer';
   const seededApplication = useMemo(() => buildSeedApplication(), []);
   const dashboardApplications = useMemo(() => {
@@ -231,6 +232,28 @@ function App() {
     } catch (error) {
       console.warn('Unable to load local demo metrics.', error);
     }
+  }, []);
+
+  useEffect(() => {
+    const connection =
+      navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+    const detectLowBandwidth = () => {
+      const effectiveType = connection?.effectiveType || '';
+      const saveData = Boolean(connection?.saveData);
+      setIsLowBandwidthMode(
+        saveData || effectiveType === 'slow-2g' || effectiveType === '2g',
+      );
+    };
+
+    detectLowBandwidth();
+
+    if (connection?.addEventListener) {
+      connection.addEventListener('change', detectLowBandwidth);
+      return () => connection.removeEventListener('change', detectLowBandwidth);
+    }
+
+    return undefined;
   }, []);
 
   const updateMetrics = (metricKey) => {
@@ -527,6 +550,10 @@ function App() {
     });
   };
 
+  const handleEnableApplicantSession = () => {
+    setHasApplicantSession(true);
+  };
+
   const handleOpenAbout = () => {
     setCurrentScreen('about');
   };
@@ -536,7 +563,7 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isLowBandwidthMode ? ' low-bandwidth-mode' : ''}`}>
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -643,6 +670,7 @@ function App() {
               onResetMetrics={handleResetMetrics}
               onOpenMockApplication={handleOpenMockApplication}
               onSaveRecommendation={handleSaveRecommendation}
+              onEnableSaveLogin={handleEnableApplicantSession}
               onOpenDashboard={handleOpenDashboardFromHomepage}
               onStartOver={handleStartOver}
             />
@@ -718,6 +746,7 @@ function App() {
               onResetMetrics={handleResetMetrics}
               onOpenMockApplication={handleOpenMockApplication}
               onSaveRecommendation={handleSaveRecommendation}
+              onEnableSaveLogin={handleEnableApplicantSession}
               onOpenDashboard={handleOpenDashboardFromHomepage}
               onStartOver={handleStartOver}
             />
