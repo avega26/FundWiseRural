@@ -256,6 +256,12 @@ function App() {
     return undefined;
   }, []);
 
+  useEffect(() => {
+    if (currentScreen === 'agent') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [currentScreen]);
+
   const updateMetrics = (metricKey) => {
     setMetrics((current) => {
       const next = {
