@@ -195,7 +195,7 @@ function FundingMatchesPanel({
   );
   const showEmptyState = hasSubmitted && !isLoading && !errorMessage && results.length === 0;
   const topMockApplicationCandidate =
-    showMockApplicationOption && results[0]?.supportsMockApplication ? results[0] : null;
+    showMockApplicationOption ? results.find((item) => item.supportsMockApplication) || null : null;
   const completionRate = metrics.pageVisits
     ? Math.round((metrics.successfulSearches / metrics.pageVisits) * 100)
     : 0;
