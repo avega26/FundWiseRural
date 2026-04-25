@@ -11,32 +11,17 @@ function AppHeader({ language, onOpenAbout, onStayOnIntake, onApplicantLogin, on
     <>
       <header className="hero" role="banner">
         <BrandBar language={language} />
-        <div className="hero-description" aria-label={copy.publicDescriptionTitle}>
-          <p>
-            FundWise Rural is an AI-assisted funding guidance tool for rural businesses.
-          </p>
-        </div>
-        <div className="hero-login-panel">
-          <div className="hero-login-card">
-            <strong>Already have an active application or account?</strong>
-            <p>Sign in to review saved funding routes, open existing applications, track progress, and respond to secure case messages.</p>
-            <button type="button" className="secondary-button" onClick={() => setShowLoginModal(true)}>
-              Login
-            </button>
-          </div>
-          <div className="hero-login-card">
-            <strong>Programme officer access</strong>
-            <p>Open the officer dashboard to review assigned cases, update stages, and flag missing information.</p>
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => setShowOfficerLoginModal(true)}
-            >
-              Officer login
-            </button>
-          </div>
-        </div>
-        <div className="hero-utility-row hero-utility-row-bottom">
+        <div className="hero-action-bar">
+          <button type="button" className="secondary-button" onClick={() => setShowLoginModal(true)}>
+            Business login
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowOfficerLoginModal(true)}
+          >
+            Officer login
+          </button>
           <button
             type="button"
             className="secondary-button secondary-button-quiet"
@@ -44,6 +29,11 @@ function AppHeader({ language, onOpenAbout, onStayOnIntake, onApplicantLogin, on
           >
             About FundWise Rural
           </button>
+        </div>
+        <div className="hero-description" aria-label={copy.publicDescriptionTitle}>
+          <p>
+            Use business login to reopen saved funding routes and applications, or officer login to review and manage active cases.
+          </p>
         </div>
       </header>
       {showLoginModal && (

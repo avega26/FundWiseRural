@@ -31,6 +31,12 @@ const representativeDirectory = {
   poland: { name: 'Marta Kowalska', title: 'Managing authority case officer' },
 };
 
+const prototypeOfficer = {
+  name: 'John Smith',
+  email: 'johnsmith@abcd.org',
+  title: 'Programme officer',
+};
+
 function getRepresentativeForApplication(profile, recommendation) {
   const countryKey = profile?.country || '';
   const fallback = { name: 'Regional Grants Desk', title: 'Funding case manager' };
@@ -89,6 +95,7 @@ function buildApplicationRecord({ profile, recommendation, draft, documentNames,
     draft,
     documentNames,
     representative,
+    assignedOfficer: null,
     flags:
       status === 'submitted'
         ? []
@@ -150,6 +157,7 @@ function buildSeedApplication() {
       title: 'Occitanie programme officer',
       authority: 'Region Occitanie Managing Authority',
     },
+    assignedOfficer: null,
     flags: [
       {
         id: 'seed-flag-1',
@@ -559,6 +567,22 @@ function App() {
     );
   };
 
+  const handleToggleApplicationAssignment = (applicationId) => {
+    const now = new Date().toISOString();
+
+    setApplications((current) =>
+      current.map((application) =>
+        application.id !== applicationId
+          ? application
+          : {
+              ...application,
+              lastUpdated: now,
+              assignedOfficer: application.assignedOfficer ? null : prototypeOfficer,
+            },
+      ),
+    );
+  };
+
   const handleAgentComplete = (prefill) => {
     setAgentPrefill(prefill);
     setCurrentLanguage(prefill?.preferredLanguage || defaultLanguage);
@@ -749,6 +773,7 @@ function App() {
               onUpdateStage={handleUpdateApplicationStage}
               onAddFlag={handleAddApplicationFlag}
               onSendMessage={handleSendApplicationMessage}
+              onToggleAssignment={handleToggleApplicationAssignment}
               onBackToResults={handleBackToResults}
               onStartOver={handleStartOver}
             />

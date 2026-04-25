@@ -280,6 +280,7 @@ function ApplicantView({
 
 function AgentView({
   application,
+  agentSection,
   stageDraft,
   onStageDraftChange,
   flagDraft,
@@ -289,14 +290,19 @@ function AgentView({
   onUpdateStage,
   onAddFlag,
   onSendMessage,
+  onToggleAssignment,
 }) {
   const [activeTab, setActiveTab] = useState('overview');
 
   if (!application) {
     return (
       <div className="dashboard-empty-card">
-        <h3>No assigned applications yet</h3>
-        <p>Applications will show here once an applicant saves or submits through the prototype flow.</p>
+        <h3>{agentSection === 'all' ? 'No active cases yet' : 'No assigned applications yet'}</h3>
+        <p>
+          {agentSection === 'all'
+            ? 'Applications will appear here once applicants save drafts or submit through the prototype flow.'
+            : 'Assigned cases will appear here after an officer claims them from the active-case list.'}
+        </p>
       </div>
     );
   }
@@ -305,11 +311,11 @@ function AgentView({
     <div className="dashboard-detail-card">
       <div className="dashboard-detail-header">
         <div>
-          <p className="summary-kicker">Assigned case</p>
+          <p className="summary-kicker">{application.assignedOfficer ? 'Assigned case' : 'Active case'}</p>
           <h3>{application.applicantName}</h3>
         </div>
         <span className="application-status-pill application-status-agent">
-          {application.representative.authority}
+          {application.assignedOfficer ? `Assigned to ${application.assignedOfficer.name}` : 'Unassigned'}
         </span>
       </div>
 
@@ -338,12 +344,23 @@ function AgentView({
       </div>
 
       {activeTab === 'overview' && (
-        <div className="dashboard-detail-grid">
-          <p><strong>Programme</strong> {application.programmeRoute}</p>
-          <p><strong>Applicant status</strong> {application.status === 'submitted' ? 'Submitted' : 'Draft only'}</p>
-          <p><strong>Representative</strong> {application.representative.name}</p>
-          <p><strong>Current stage</strong> {getStageLabel(application.progressSteps, application.currentStageKey)}</p>
-        </div>
+        <>
+          <div className="dashboard-detail-grid">
+            <p><strong>Programme</strong> {application.programmeRoute}</p>
+            <p><strong>Applicant status</strong> {application.status === 'submitted' ? 'Submitted' : 'Draft only'}</p>
+            <p><strong>Representative</strong> {application.representative.name}</p>
+            <p><strong>Current stage</strong> {getStageLabel(application.progressSteps, application.currentStageKey)}</p>
+          </div>
+          <div className="dashboard-link-actions">
+            <button
+              type="button"
+              className={application.assignedOfficer ? 'secondary-button' : 'primary-button'}
+              onClick={() => onToggleAssignment(application.id)}
+            >
+              {application.assignedOfficer ? 'Remove from my queue' : 'Assign to me'}
+            </button>
+          </div>
+        </>
       )}
 
       {activeTab === 'stages' && (
@@ -430,17 +447,31 @@ function ApplicationDashboardPanel({
   onUpdateStage,
   onAddFlag,
   onSendMessage,
+  onToggleAssignment,
   onBackToResults,
   onStartOver,
 }) {
   const copy = getTranslation(language);
   const [applicantMessageDraft, setApplicantMessageDraft] = useState('');
   const [applicantSection, setApplicantSection] = useState('applications');
+  const [agentSection, setAgentSection] = useState('queue');
   const [agentMessageDraft, setAgentMessageDraft] = useState('');
   const [agentFlagDraft, setAgentFlagDraft] = useState('');
-  const activeApplication = useMemo(
+  const queueApplications = useMemo(
+    () => applications.filter((application) => Boolean(application.assignedOfficer)),
+    [applications],
+  );
+  const activeAgentApplications = agentSection === 'all' ? applications : queueApplications;
+  const activeApplicantApplication = useMemo(
     () => applications.find((application) => application.id === activeApplicationId) || applications[0] || null,
     [applications, activeApplicationId],
+  );
+  const activeAgentApplication = useMemo(
+    () =>
+      activeAgentApplications.find((application) => application.id === activeApplicationId) ||
+      activeAgentApplications[0] ||
+      null,
+    [activeAgentApplications, activeApplicationId],
   );
   const activeSavedRecommendation = useMemo(
     () =>
@@ -449,35 +480,35 @@ function ApplicationDashboardPanel({
       null,
     [savedRecommendations, activeSavedRecommendationId],
   );
-  const [agentStageDraft, setAgentStageDraft] = useState(activeApplication?.currentStageKey || '');
+  const [agentStageDraft, setAgentStageDraft] = useState('');
 
   useEffect(() => {
-    if (activeApplication?.currentStageKey) {
-      setAgentStageDraft(activeApplication.currentStageKey);
+    if (activeAgentApplication?.currentStageKey) {
+      setAgentStageDraft(activeAgentApplication.currentStageKey);
     }
-  }, [activeApplication]);
+  }, [activeAgentApplication]);
 
   const handleApplicantMessage = (text) => {
-    if (!activeApplication || !text.trim()) return;
-    onSendMessage(activeApplication.id, 'user', text.trim());
+    if (!activeApplicantApplication || !text.trim()) return;
+    onSendMessage(activeApplicantApplication.id, 'user', text.trim());
     setApplicantMessageDraft('');
   };
 
   const handleAgentMessage = (text) => {
-    if (!activeApplication || !text.trim()) return;
-    onSendMessage(activeApplication.id, 'agent', text.trim());
+    if (!activeAgentApplication || !text.trim()) return;
+    onSendMessage(activeAgentApplication.id, 'agent', text.trim());
     setAgentMessageDraft('');
   };
 
   const handleAddFlag = (text) => {
-    if (!activeApplication || !text.trim()) return;
-    onAddFlag(activeApplication.id, text.trim(), 'missing-document');
+    if (!activeAgentApplication || !text.trim()) return;
+    onAddFlag(activeAgentApplication.id, text.trim(), 'missing-document');
     setAgentFlagDraft('');
   };
 
   const handleUpdateStage = (stageKey) => {
-    if (!activeApplication || !stageKey) return;
-    onUpdateStage(activeApplication.id, stageKey);
+    if (!activeAgentApplication || !stageKey) return;
+    onUpdateStage(activeAgentApplication.id, stageKey);
   };
 
   return (
@@ -527,28 +558,58 @@ function ApplicationDashboardPanel({
             <p className="summary-kicker">{dashboardRole === 'agent' ? 'Applications' : applicantSection === 'saved' ? 'Saved routes' : 'Applications'}</p>
             <h3>
               {dashboardRole === 'agent'
-                ? 'Assigned cases'
+                ? agentSection === 'all'
+                  ? 'All active cases'
+                  : 'My queue'
                 : applicantSection === 'saved'
                   ? 'Saved funding routes'
                   : 'My applications'}
             </h3>
+            {dashboardRole === 'agent' && (
+              <div className="dashboard-subtabs dashboard-subtabs-top">
+                <button
+                  type="button"
+                  className={`dashboard-subtab${agentSection === 'queue' ? ' active' : ''}`}
+                  onClick={() => setAgentSection('queue')}
+                >
+                  My queue
+                </button>
+                <button
+                  type="button"
+                  className={`dashboard-subtab${agentSection === 'all' ? ' active' : ''}`}
+                  onClick={() => setAgentSection('all')}
+                >
+                  All active cases
+                </button>
+              </div>
+            )}
             <div className="dashboard-application-list">
-              {(dashboardRole === 'agent' || applicantSection === 'applications') && applications.length === 0 ? (
+              {(dashboardRole === 'agent' || applicantSection === 'applications') &&
+              (dashboardRole === 'agent' ? activeAgentApplications.length === 0 : applications.length === 0) ? (
                 <p className="panel-copy">No applications yet.</p>
               ) : dashboardRole !== 'agent' && applicantSection === 'saved' && savedRecommendations.length === 0 ? (
                 <p className="panel-copy">No saved funding routes yet.</p>
               ) : (
                 (dashboardRole === 'agent' || applicantSection === 'applications'
-                  ? applications.map((application) => (
+                  ? (dashboardRole === 'agent' ? activeAgentApplications : applications).map((application) => (
                       <button
                         key={application.id}
                         type="button"
-                        className={`dashboard-application-item${application.id === activeApplication?.id ? ' active' : ''}`}
+                        className={`dashboard-application-item${
+                          application.id ===
+                          (dashboardRole === 'agent' ? activeAgentApplication?.id : activeApplicantApplication?.id)
+                            ? ' active'
+                            : ''
+                        }`}
                         onClick={() => onSelectApplication(application.id)}
                       >
                         <strong>{application.projectTitle || application.recommendationName}</strong>
                         <span>{application.programmeRoute}</span>
-                        <span>{getStageLabel(application.progressSteps, application.currentStageKey)}</span>
+                        <span>
+                          {dashboardRole === 'agent' && application.assignedOfficer
+                            ? `Assigned to ${application.assignedOfficer.name}`
+                            : getStageLabel(application.progressSteps, application.currentStageKey)}
+                        </span>
                       </button>
                     ))
                   : savedRecommendations.map((item) => (
@@ -571,7 +632,7 @@ function ApplicationDashboardPanel({
         <div className="dashboard-main">
           {dashboardRole === 'applicant' ? (
             <ApplicantView
-              application={activeApplication}
+              application={activeApplicantApplication}
               savedRecommendation={activeSavedRecommendation}
               applicantSection={applicantSection}
               onApplicantSectionChange={setApplicantSection}
@@ -581,7 +642,8 @@ function ApplicationDashboardPanel({
             />
           ) : (
             <AgentView
-              application={activeApplication}
+              application={activeAgentApplication}
+              agentSection={agentSection}
               stageDraft={agentStageDraft}
               onStageDraftChange={setAgentStageDraft}
               flagDraft={agentFlagDraft}
@@ -591,6 +653,7 @@ function ApplicationDashboardPanel({
               onUpdateStage={handleUpdateStage}
               onAddFlag={handleAddFlag}
               onSendMessage={handleAgentMessage}
+              onToggleAssignment={onToggleAssignment}
             />
           )}
         </div>
