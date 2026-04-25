@@ -1317,6 +1317,25 @@ textarea:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
   margin-top: 16px;
+  max-height: 780px;
+  overflow-y: auto;
+  padding-right: 6px;
+  align-content: start;
+}
+
+.general-grants-grid::-webkit-scrollbar {
+  width: 10px;
+}
+
+.general-grants-grid::-webkit-scrollbar-track {
+  background: rgba(214, 226, 235, 0.56);
+  border-radius: 999px;
+}
+
+.general-grants-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 101, 162, 0.26);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.82);
 }
 
 .general-grant-item {
