@@ -617,26 +617,36 @@ function getNarrativeBusinessSize(size, language) {
       micro: 'micro',
       small: 'small',
       medium: 'medium-sized',
+      midCap: 'mid-cap',
+      large: 'large',
     },
     es: {
       micro: 'micro',
       small: 'pequeña',
       medium: 'mediana',
+      midCap: 'mid-cap',
+      large: 'grande',
     },
     it: {
       micro: 'micro',
       small: 'piccola',
       medium: 'media',
+      midCap: 'mid-cap',
+      large: 'grande',
     },
     pl: {
       micro: 'mikro',
       small: 'mała',
       medium: 'średnia',
+      midCap: 'mid-cap',
+      large: 'duża',
     },
     fr: {
       micro: 'micro',
       small: 'petite',
       medium: 'moyenne',
+      midCap: 'mid-cap',
+      large: 'grande',
     },
   };
 
@@ -2019,6 +2029,8 @@ Style requirements:
 - Friendly, clear, and lightly witty.
 - Professional enough for a public-sector funding tool.
 - Answer like a helpful guide, not like a chatbot cliche.
+- If the user asks harmless personal small-talk questions, answer warmly in character as Seraphina and then offer to help with funding if relevant.
+- If the user is rude, sexual, hateful, or inappropriate, respond calmly, set a boundary, and redirect back to a respectful funding-related interaction.
 - Keep answers concise: usually 2 short paragraphs or 3 bullets max.
 - Explain CAP, ERDF, grant fit, and next steps in everyday language.
 - If the user asks why a route is weak or unlikely, explain the specific reason.
@@ -2078,6 +2090,10 @@ function buildLocalAssistantResponse({
   const topResult = results?.[0];
   const businessName = submittedProfile?.businessName || genericBusinessReference(language);
 
+  if (/(stupid|idiot|dumb|shut up|hate you|kill yourself|sex|sexy|nude|racist|slur)/.test(normalizedQuestion)) {
+    return 'I’m happy to help, but I need to keep this respectful and professional. If you want, we can go back to your funding options, application steps, or the form questions.';
+  }
+
   if (currentScreen === 'agent' || normalizedQuestion.includes('onboarding mode')) {
     const nextQuestionMatch = question.match(/NEXT QUESTION:\s*(.+)/);
     const currentQuestionMatch = question.match(/CURRENT QUESTION:\s*(.+)/);
@@ -2109,6 +2125,34 @@ function buildLocalAssistantResponse({
     return inferredName
       ? `${inferredName} is starting to make sense to me now. ${nextQuestionMatch?.[1] || currentQuestionMatch?.[1] || 'Tell me a little more so I can prefill the form properly.'}`
       : `${nextQuestionMatch?.[1] || currentQuestionMatch?.[1] || 'Tell me a little more so I can prefill the form properly.'}`;
+  }
+
+  if (/how are you|hows it going|how are you doing/.test(normalizedQuestion)) {
+    return 'I’m doing well, thank you. Calm, focused, and ready to untangle funding questions if you want to keep going.';
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+color\b|\bwhat(?:s| is)\s+your\s+color\b/.test(normalizedQuestion)) {
+    return 'Blue-grey, without hesitation. It feels polished, calm, and just bureaucratic enough for this job.';
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+(treat|treats|food|snack|snacks)\b|\bwhat(?:s| is)\s+your\s+(favorite|favourite|fav|fave)\b|\bfood\b.*\b(favorite|favourite|fav|fave)\b/.test(normalizedQuestion)) {
+    return 'Probably salmon treats. Professional on the outside, treat-motivated on the inside.';
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+season\b|\bwhat(?:s| is)\s+your\s+(favorite|favourite|fav|fave)\s+season\b/.test(normalizedQuestion)) {
+    return 'Autumn. It feels calm, organised, and slightly better dressed than the other seasons.';
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+place\b|\bwhere would you go\b|\bwhere do you like to be\b/.test(normalizedQuestion)) {
+    return 'Somewhere quiet with a window, a warm patch of light, and no one uploading the wrong document version.';
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+animal\b|\bwhat animal would you be\b/.test(normalizedQuestion)) {
+    return 'A cat remains the strongest answer. Graceful, observant, and occasionally unimpressed for good reason.';
+  }
+
+  if (/fun|for fun|hobby|hobbies|what do you like to do/.test(normalizedQuestion)) {
+    return 'I enjoy turning confusing funding language into something a real person can actually use. It is a strangely satisfying hobby.';
   }
 
   if (!submittedProfile && currentScreen === 'form') {

@@ -1,14 +1,123 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { askFundwiseAssistant } from '../aiHelper';
 import { countryOptions, defaultLanguage, getTranslation, languageOptions, regionsByCountry } from '../i18n/translations';
 import SeraphinaAvatar from './SeraphinaAvatar';
 
-const agentQuestions = [
-  'What is your business called, and what kind of work do you do?',
-  'Where is the business based, and is it mainly rural or not?',
-  'Roughly how big is the business, how long have you been operating, and do any tags fit like women-owned, youth-owned, cooperative, sustainable, or innovative?',
-  'What are you hoping to fund or improve right now, and do you want just regional grants or general grants too?',
-];
+const agentQuestionSets = {
+  en: [
+    'What is your business called, and what kind of work do you do?',
+    'Where is the business based, and is it mainly rural or not?',
+    'Roughly how big is the business, how long have you been operating, and do any tags fit like women-owned, youth-owned, cooperative, sustainable, or innovative?',
+    'What are you hoping to fund or improve right now, and do you want just regional grants or general grants too?',
+  ],
+  es: [
+    '¿Cómo se llama su empresa y a qué se dedica?',
+    '¿Dónde está ubicada la empresa y es principalmente rural o no?',
+    '¿Qué tamaño tiene aproximadamente la empresa, cuánto tiempo lleva operando y encaja alguna etiqueta como propiedad de mujeres, de jóvenes, cooperativa, sostenible o innovadora?',
+    '¿Qué espera financiar o mejorar ahora mismo y quiere solo subvenciones regionales o también generales?',
+  ],
+  it: [
+    'Come si chiama la sua impresa e di cosa si occupa?',
+    'Dove ha sede l’impresa ed è principalmente in area rurale oppure no?',
+    'Quanto è grande circa l’impresa, da quanto tempo opera e si adatta qualche tag come a conduzione femminile, giovanile, cooperativa, sostenibile o innovativa?',
+    'Che cosa spera di finanziare o migliorare adesso e vuole solo bandi regionali o anche generali?',
+  ],
+  pl: [
+    'Jak nazywa się firma i czym się zajmuje?',
+    'Gdzie firma ma siedzibę i czy działa głównie na obszarze wiejskim czy nie?',
+    'Jakiej wielkości jest mniej więcej firma, jak długo działa i czy pasują do niej oznaczenia, takie jak prowadzona przez kobiety, młodych, spółdzielnia, zrównoważona lub innowacyjna?',
+    'Co chcecie teraz sfinansować lub ulepszyć i czy interesują was tylko dotacje regionalne, czy także ogólne?',
+  ],
+  fr: [
+    'Comment s’appelle votre entreprise et quel type d’activité exerce-t-elle ?',
+    'Où l’entreprise est-elle basée et est-elle principalement rurale ou non ?',
+    'Quelle est approximativement la taille de l’entreprise, depuis combien de temps existe-t-elle et des étiquettes comme dirigée par des femmes, par des jeunes, coopérative, durable ou innovante s’appliquent-elles ?',
+    'Que souhaitez-vous financer ou améliorer maintenant, et voulez-vous seulement des aides régionales ou aussi des aides plus générales ?',
+  ],
+};
+
+const agentUiCopy = {
+  en: {
+    guideEyebrow: 'AI Guide',
+    title: 'Meet Seraphina',
+    intro:
+      'Seraphina will ask a few quick questions to understand your business, then help you start the full form with some details already filled in.',
+    languageLabel: 'Preferred language',
+    replyPlaceholder: 'Type your reply here...',
+    replyTyping: 'Seraphina is replying…',
+    replyHint: 'Press Enter to send, or Shift+Enter for a new line.',
+    send: 'Send',
+    thinking: 'Thinking…',
+    openingForm: 'Opening form…',
+    skip: 'Skip to full form',
+    prefillNote:
+      'The AI guide prefilled a few fields for you. Review and adjust anything before running the full recommendation flow.',
+  },
+  es: {
+    guideEyebrow: 'Guía con IA',
+    title: 'Conozca a Seraphina',
+    intro:
+      'Seraphina hará unas preguntas rápidas para entender su empresa y luego le ayudará a iniciar el formulario completo con algunos datos ya rellenados.',
+    languageLabel: 'Idioma preferido',
+    replyPlaceholder: 'Escriba su respuesta aquí...',
+    replyTyping: 'Seraphina está respondiendo…',
+    replyHint: 'Pulse Enter para enviar o Shift+Enter para una nueva línea.',
+    send: 'Enviar',
+    thinking: 'Pensando…',
+    openingForm: 'Abriendo formulario…',
+    skip: 'Ir al formulario completo',
+    prefillNote:
+      'La guía de IA ha rellenado algunos campos por usted. Revise y ajuste lo necesario antes de ejecutar la recomendación completa.',
+  },
+  it: {
+    guideEyebrow: 'Guida IA',
+    title: 'Conosca Seraphina',
+    intro:
+      'Seraphina le farà alcune domande rapide per capire la sua impresa e poi la aiuterà ad avviare il modulo completo con alcuni dati già compilati.',
+    languageLabel: 'Lingua preferita',
+    replyPlaceholder: 'Scriva qui la sua risposta...',
+    replyTyping: 'Seraphina sta rispondendo…',
+    replyHint: 'Premi Invio per inviare oppure Maiusc+Invio per andare a capo.',
+    send: 'Invia',
+    thinking: 'Sto pensando…',
+    openingForm: 'Apro il modulo…',
+    skip: 'Vai al modulo completo',
+    prefillNote:
+      'La guida IA ha precompilato alcuni campi per lei. Controlli e modifichi ciò che serve prima di avviare la raccomandazione completa.',
+  },
+  pl: {
+    guideEyebrow: 'Przewodnik AI',
+    title: 'Poznaj Seraphinę',
+    intro:
+      'Seraphina zada kilka szybkich pytań, aby zrozumieć Twoją firmę, a potem pomoże rozpocząć pełny formularz z częścią pól już uzupełnionych.',
+    languageLabel: 'Preferowany język',
+    replyPlaceholder: 'Wpisz odpowiedź tutaj...',
+    replyTyping: 'Seraphina odpowiada…',
+    replyHint: 'Naciśnij Enter, aby wysłać, lub Shift+Enter, aby przejść do nowej linii.',
+    send: 'Wyślij',
+    thinking: 'Myślę…',
+    openingForm: 'Otwieram formularz…',
+    skip: 'Przejdź do pełnego formularza',
+    prefillNote:
+      'Przewodnik AI uzupełnił już kilka pól. Sprawdź je i popraw, jeśli trzeba, zanim uruchomisz pełne rekomendacje.',
+  },
+  fr: {
+    guideEyebrow: 'Guide IA',
+    title: 'Rencontrez Seraphina',
+    intro:
+      'Seraphina vous posera quelques questions rapides pour comprendre votre entreprise, puis vous aidera à ouvrir le formulaire complet avec certains champs déjà préremplis.',
+    languageLabel: 'Langue préférée',
+    replyPlaceholder: 'Saisissez votre réponse ici...',
+    replyTyping: 'Seraphina répond…',
+    replyHint: 'Appuyez sur Entrée pour envoyer, ou sur Maj+Entrée pour aller à la ligne.',
+    send: 'Envoyer',
+    thinking: 'Réflexion…',
+    openingForm: 'Ouverture du formulaire…',
+    skip: 'Passer au formulaire complet',
+    prefillNote:
+      'Le guide IA a prérempli quelques champs pour vous. Vérifiez-les et ajustez-les avant de lancer la recommandation complète.',
+  },
+};
 
 const initialDraft = {
   preferredLanguage: defaultLanguage,
@@ -84,7 +193,7 @@ function inferBusinessName(text) {
     return cleanBusinessName(namedPattern[1]);
   }
 
-  const weArePattern = text.match(/(?:we are|i run|i own|my business is|i manage|our business is|this is)\s+([^,.!\n]{2,60})/i);
+  const weArePattern = text.match(/(?:we are|i run|i own|my business is|i manage|our business is|this is)\s+([^,.!\n]{2,80})/i);
   if (weArePattern?.[1]) {
     return cleanBusinessName(weArePattern[1]);
   }
@@ -100,9 +209,12 @@ function inferBusinessName(text) {
 
 function cleanBusinessName(value = '') {
   return value
+    .replace(/^(is|called|named)\s+/i, '')
     .replace(/^(a|an|the)\s+/i, '')
+    .replace(/^(our|my)\s+/i, '')
     .replace(/\b(and|that|which)\b.*$/i, '')
     .replace(/\b(a|an|the)\s+(farm|business|company|studio|shop)\b.*$/i, '')
+    .replace(/\b(in|based in|located in)\b.*$/i, '')
     .replace(/[.,:;!?]+$/g, '')
     .trim();
 }
@@ -121,26 +233,34 @@ function appendContext(currentValue, addition) {
   return `${currentValue.trim()} ${cleaned.endsWith('.') ? cleaned : `${cleaned}.`}`;
 }
 
-function inferGoal(text) {
+function inferGoal(text, { allowOther = false } = {}) {
   const normalized = normalizeComparable(text);
+  const scoreCard = {
+    digitize: 0,
+    sustainabilityUpgrade: 0,
+    buyEquipment: 0,
+    expandOperations: 0,
+    hireStaff: 0,
+  };
 
-  if (/(digit|website|booking|software|ecommerce|online)/.test(normalized)) {
-    return 'digitize';
-  }
-  if (/(sustain|green|energy|water|irrigation|efficiency|solar)/.test(normalized)) {
-    return 'sustainabilityUpgrade';
-  }
-  if (/(equipment|machine|tractor|tool|purchase)/.test(normalized)) {
-    return 'buyEquipment';
-  }
-  if (/(expand|growth|larger|new location|scale)/.test(normalized)) {
-    return 'expandOperations';
-  }
-  if (/(hire|staff|employees|team)/.test(normalized)) {
-    return 'hireStaff';
+  const score = (key, pattern, amount = 1) => {
+    if (pattern.test(normalized)) {
+      scoreCard[key] += amount;
+    }
+  };
+
+  score('digitize', /(digit|website|booking|software|ecommerce|online|platform|crm|system|automation|digital|app)/, 2);
+  score('sustainabilityUpgrade', /(sustain|green|energy|water|irrigation|efficiency|solar|waste|carbon|environment|resilience)/, 2);
+  score('buyEquipment', /(equipment|machine|tractor|tool|purchase|buy|upgrade machinery|hardware|vehicle|packaging line|pump)/, 2);
+  score('expandOperations', /(expand|growth|larger|new location|scale|capacity|more customers|reach new markets|increase production|grow the business)/, 2);
+  score('hireStaff', /(hire|staff|employees|team|recruit|workforce|new roles|training staff)/, 2);
+
+  const bestMatch = Object.entries(scoreCard).sort((a, b) => b[1] - a[1])[0];
+  if (bestMatch?.[1] > 0) {
+    return bestMatch[0];
   }
 
-  return 'other';
+  return allowOther ? 'other' : '';
 }
 
 function inferAgricultureSubType(text) {
@@ -209,6 +329,18 @@ function inferRuralArea(text) {
 
 function inferBusinessSize(text) {
   const normalized = normalizeComparable(text);
+  const headcountMatch = normalized.match(/(\d+)\s*(?:employees|employee|staff|workers|people|person team|team members)/);
+
+  if (headcountMatch) {
+    const count = Number(headcountMatch[1]);
+    if (Number.isFinite(count)) {
+      if (count < 10) return 'micro';
+      if (count < 50) return 'small';
+      if (count < 250) return 'medium';
+      if (count < 3000) return 'midCap';
+      return 'large';
+    }
+  }
 
   if (/(micro|solo|just me|1 employee|2 employees|3 employees|4 employees|5 employees|under 10)/.test(normalized)) {
     return 'micro';
@@ -222,16 +354,44 @@ function inferBusinessSize(text) {
     return 'medium';
   }
 
+  if (/(mid cap|mid-cap|midcap|250 employees|300 employees|500 employees|1000 employees|2000 employees|under 3000)/.test(normalized)) {
+    return 'midCap';
+  }
+
+  if (/(large|large business|large company|enterprise scale|3000 employees|5000 employees|10000 employees|corporate)/.test(normalized)) {
+    return 'large';
+  }
+
   return '';
 }
 
 function inferYearsInOperation(text) {
   const normalized = normalizeComparable(text);
   const yearNumberMatch = normalized.match(/(\d+)\s*(?:years?|yrs?)/);
+  const monthsMatch = normalized.match(/(\d+)\s*(?:months?|mos?)/);
+  const openedYearMatch = normalized.match(/(?:since|opened in|started in|operating since)\s*(20\d{2}|19\d{2})/);
 
   if (yearNumberMatch) {
     const years = Number(yearNumberMatch[1]);
     if (Number.isFinite(years)) {
+      if (years <= 1) return '0-1';
+      if (years <= 5) return '2-5';
+      return '6+';
+    }
+  }
+
+  if (monthsMatch) {
+    const months = Number(monthsMatch[1]);
+    if (Number.isFinite(months) && months < 12) {
+      return '0-1';
+    }
+  }
+
+  if (openedYearMatch) {
+    const currentYear = new Date().getFullYear();
+    const openedYear = Number(openedYearMatch[1]);
+    const years = currentYear - openedYear;
+    if (Number.isFinite(years) && years >= 0) {
       if (years <= 1) return '0-1';
       if (years <= 5) return '2-5';
       return '6+';
@@ -253,6 +413,18 @@ function inferYearsInOperation(text) {
   return '';
 }
 
+function getNarrativeSizeLabel(size) {
+  const labels = {
+    micro: 'micro business',
+    small: 'small business',
+    medium: 'medium-sized business',
+    midCap: 'mid-cap business',
+    large: 'large enterprise',
+  };
+
+  return labels[size] || '';
+}
+
 function inferSpecialTags(text) {
   const normalized = normalizeComparable(text);
   const tags = [];
@@ -266,6 +438,29 @@ function inferSpecialTags(text) {
   return tags;
 }
 
+function extractProfileSignals(text, questionIndex) {
+  const location = inferCountryAndRegion(text);
+  const inferredGoal =
+    questionIndex === 3
+      ? inferGoal(text, { allowOther: true })
+      : inferGoal(text, { allowOther: false });
+
+  return {
+    businessType: inferBusinessType(text),
+    businessName: inferBusinessName(text),
+    agricultureSubType: inferAgricultureSubType(text),
+    country: location.country,
+    region: location.region,
+    ruralArea: inferRuralArea(text),
+    businessSize: inferBusinessSize(text),
+    yearsInOperation: inferYearsInOperation(text),
+    mainGoal: inferredGoal,
+    otherMainGoal: inferredGoal === 'other' ? text.trim() : '',
+    grantScopePreference: inferGrantScope(text),
+    specialTags: inferSpecialTags(text),
+  };
+}
+
 function answerLooksLikeProfileContent(text, questionIndex) {
   const normalized = normalizeComparable(text);
 
@@ -273,17 +468,18 @@ function answerLooksLikeProfileContent(text, questionIndex) {
     return false;
   }
 
+  const signals = extractProfileSignals(text, questionIndex);
   const generalSignals = [
-    inferBusinessType(text),
-    inferBusinessName(text),
-    inferCountryAndRegion(text).country,
-    inferCountryAndRegion(text).region,
-    inferRuralArea(text),
-    inferBusinessSize(text),
-    inferYearsInOperation(text),
-    inferGoal(text),
-    inferGrantScope(text),
-    ...inferSpecialTags(text),
+    signals.businessType,
+    signals.businessName,
+    signals.country,
+    signals.region,
+    signals.ruralArea,
+    signals.businessSize,
+    signals.yearsInOperation,
+    signals.mainGoal,
+    signals.grantScopePreference,
+    ...signals.specialTags,
   ].filter(Boolean);
 
   if (generalSignals.length > 0) {
@@ -298,7 +494,7 @@ function answerLooksLikeProfileContent(text, questionIndex) {
     return true;
   }
 
-  if (questionIndex === 2 && /(\d+|micro|small|medium|years?|owned|innovative|sustainable|cooperative)/.test(normalized)) {
+  if (questionIndex === 2 && /(\d+|micro|small|medium|mid.?cap|large|years?|owned|innovative|sustainable|cooperative)/.test(normalized)) {
     return true;
   }
 
@@ -314,7 +510,7 @@ function buildRefinedBusinessContext(draft, answers, copy) {
   const businessName = draft.businessName?.trim();
   const businessTypeLabel = copy.businessTypes?.[draft.businessType] || draft.businessType || 'business';
   const agricultureLabel = copy.agricultureSubTypes?.[draft.agricultureSubType] || '';
-  const sizeLabel = copy.businessSizes?.[draft.businessSize] || draft.businessSize || '';
+  const sizeLabel = getNarrativeSizeLabel(draft.businessSize);
   const countryLabel = copy.countries?.[draft.country] || draft.country || '';
   const regionLabel =
     regionsByCountry[draft.country || '']?.find((entry) => entry.value === draft.region)?.label || draft.region || '';
@@ -328,8 +524,11 @@ function buildRefinedBusinessContext(draft, answers, copy) {
   if (businessName || businessTypeLabel) {
     const subject = businessName || 'The business';
     const typePhrase = agricultureLabel ? `${businessTypeLabel} focused on ${agricultureLabel}` : businessTypeLabel;
-    const sizePhrase = sizeLabel ? `${sizeLabel} ` : '';
-    sentences.push(`${subject} is a ${sizePhrase}${typePhrase}`.replace(/\s+/g, ' ').trim() + '.');
+    sentences.push(
+      sizeLabel
+        ? `${subject} is a ${sizeLabel} operating as a ${typePhrase}.`.replace(/\s+/g, ' ').trim()
+        : `${subject} is a ${typePhrase}.`.replace(/\s+/g, ' ').trim(),
+    );
   }
 
   if (countryLabel || regionLabel || draft.ruralArea) {
@@ -402,7 +601,7 @@ function getClarificationPrompt(questionIndex, draft) {
   }
 
   if (questionIndex === 2 && !draft.businessSize && !draft.yearsInOperation && draft.specialTags.length === 0) {
-    return 'I still need a rough sense of scale. Is the business micro, small, or medium, how long has it been operating, and do any profile tags fit?';
+    return 'I still need a rough sense of scale. Is the business micro, small, medium, mid-cap, or large, how long has it been operating, and do any profile tags fit?';
   }
 
   if (questionIndex === 3 && !draft.mainGoal && !draft.otherMainGoal) {
@@ -514,27 +713,59 @@ function getNextQuestionLead(nextQuestionIndex, nextDraft) {
   return '';
 }
 
-function getCurrentQuestionPrompt(questionIndex) {
-  return agentQuestions[questionIndex] || agentQuestions[agentQuestions.length - 1];
+function getCurrentQuestionPrompt(questionIndex, questions) {
+  return questions[questionIndex] || questions[questions.length - 1];
 }
 
-function getSideQuestionResponse(answer, currentQuestionIndex) {
+function getSideQuestionResponse(answer, currentQuestionIndex, questions) {
   const normalizedAnswer = normalizeComparable(answer);
 
+  if (/(stupid|idiot|dumb|shut up|hate you|kill yourself|sex|sexy|nude|racist|slur)/.test(normalizedAnswer)) {
+    return `I’m here to keep this respectful and useful. I can still help with the funding process, so let’s continue with this: ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
   if (/who are you|what are you|what do you do/.test(normalizedAnswer)) {
-    return `I’m Seraphina, the FundWise guide. Think of me as a grant-savvy grey cat with decent manners and a job to make this form less annoying. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
+    return `I’m Seraphina, the FundWise guide. Think of me as a grant-savvy grey cat with decent manners and a job to make this form less annoying. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/how are you|hows it going|how are you doing/.test(normalizedAnswer)) {
+    return `I’m doing nicely, thank you. Calm, focused, and professionally curious. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+color\b|\bwhat(?:s| is)\s+your\s+color\b/.test(normalizedAnswer)) {
+    return `A soft blue-grey feels right for me. Very official, very feline, and unlikely to clash with a government portal. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+(treat|treats|food|snack|snacks)\b|\bwhat(?:s| is)\s+your\s+(favorite|favourite|fav|fave)\b|\bfood\b.*\b(favorite|favourite|fav|fave)\b/.test(normalizedAnswer)) {
+    return `Probably something elegant and bribery-adjacent, like salmon treats. Strictly off the record. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+season\b|\bwhat(?:s| is)\s+your\s+(favorite|favourite|fav|fave)\s+season\b/.test(normalizedAnswer)) {
+    return `Autumn feels right to me. Calm air, good colours, and fewer dramatic surprises than summer funding portals. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+place\b|\bwhere would you go\b|\bwhere do you like to be\b/.test(normalizedAnswer)) {
+    return `Somewhere quiet with a window, a tidy desk, and absolutely no missing attachments. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/\b(favorite|favourite|fav|fave)\s+animal\b|\bwhat animal would you be\b/.test(normalizedAnswer)) {
+    return `Professionally, I should say “a helpful guide.” Realistically, still a cat. I have a brand to maintain. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
+  }
+
+  if (/fun|for fun|hobby|hobbies|what do you like to do/.test(normalizedAnswer)) {
+    return `I enjoy translating confusing funding language into normal human language, which is a niche hobby but an honest one. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
   }
 
   if (/how does this work|what does this do|why are you asking/.test(normalizedAnswer)) {
-    return `I ask a few quick setup questions, prefill the intake form, and then the full tool handles the deeper matching. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
+    return `I ask a few quick setup questions, prefill the intake form, and then the full tool handles the deeper matching. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
   }
 
   if (/hello|hi|hey|good morning|good afternoon/.test(normalizedAnswer)) {
-    return `Hi back. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
+    return `Hi back. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
   }
 
   if (/thank you|thanks/.test(normalizedAnswer)) {
-    return `Any time. ${getCurrentQuestionPrompt(currentQuestionIndex)}`;
+    return `Any time. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}`;
   }
 
   if (/help|what should i say|example/.test(normalizedAnswer)) {
@@ -547,7 +778,7 @@ function getSideQuestionResponse(answer, currentQuestionIndex) {
     }
 
     if (currentQuestionIndex === 2) {
-      return 'Even a rough answer works, like “micro business, 3 years old, women-owned and sustainable.” Roughly how big is the business, how long have you been operating, and do any tags fit?';
+      return 'Even a rough answer works, like “micro business, 3 years old, women-owned and sustainable” or “mid-cap, 400 employees, operating since 2018.” Roughly how big is the business, how long have you been operating, and do any tags fit?';
     }
 
     return 'You can say something like “irrigation improvements and a website, regional only” or “software upgrades and broader grants too.” What are you hoping to fund or improve right now, and do you want just regional grants or general grants too?';
@@ -562,13 +793,14 @@ function buildAgentPrompt({
   nextQuestionIndex,
   nextDraft,
   shouldComplete,
+  questions,
 }) {
-  const nextQuestion = agentQuestions[nextQuestionIndex] || '';
+  const nextQuestion = questions[nextQuestionIndex] || '';
 
   return [
     'ONBOARDING MODE: true',
     `USER ANSWER: ${answer}`,
-    `CURRENT QUESTION: ${agentQuestions[currentQuestionIndex]}`,
+    `CURRENT QUESTION: ${questions[currentQuestionIndex]}`,
     `NEXT QUESTION: ${nextQuestion}`,
     `SHOULD COMPLETE: ${shouldComplete ? 'yes' : 'no'}`,
     `INFERRED PROFILE: ${JSON.stringify({
@@ -590,6 +822,8 @@ function buildAgentPrompt({
 
 function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }) {
   const copy = getTranslation(language);
+  const ui = agentUiCopy[language] || agentUiCopy.en;
+  const questions = useMemo(() => agentQuestionSets[language] || agentQuestionSets.en, [language]);
   const [draft, setDraft] = useState({
     ...initialDraft,
     preferredLanguage: language || defaultLanguage,
@@ -597,7 +831,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: `Hi! I’m Seraphina, your FundWise guide. ${agentQuestions[0]}`,
+      text: `Hi! I’m Seraphina, your FundWise guide. ${questions[0]}`,
     },
   ]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -606,7 +840,17 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
   const [isTyping, setIsTyping] = useState(false);
   const [clarificationCounts, setClarificationCounts] = useState({});
   const [answerHistory, setAnswerHistory] = useState([]);
+  const [pendingSkipToForm, setPendingSkipToForm] = useState(false);
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    setMessages([
+      {
+        role: 'assistant',
+        text: `Hi! I’m Seraphina, your FundWise guide. ${questions[0]}`,
+      },
+    ]);
+  }, [questions]);
 
   useEffect(() => {
     onLanguageChange?.(language || defaultLanguage);
@@ -636,9 +880,55 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       return;
     }
 
+    const normalized = normalizeComparable(trimmed);
+
+    if (pendingSkipToForm) {
+      const isConfirmingSkip = /^(yes|yeah|yep|please do|go ahead|sure|ok|okay|confirm)$/i.test(normalized);
+      const isCancellingSkip = /^(no|not yet|never mind|nope|cancel)$/i.test(normalized);
+
+      setMessages((current) => [...current, { role: 'user', text: trimmed }]);
+      setInputValue('');
+      setPendingSkipToForm(false);
+
+      if (isConfirmingSkip) {
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', text: 'Absolutely. I’m opening the intake form now so you can continue there.' },
+        ]);
+        setIsComplete(true);
+        return;
+      }
+
+      if (isCancellingSkip) {
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', text: `No problem. ${getCurrentQuestionPrompt(currentQuestionIndex, questions)}` },
+        ]);
+        return;
+      }
+
+      setMessages((current) => [
+        ...current,
+        { role: 'assistant', text: 'Just to confirm, would you like me to take you to the full intake form now?' },
+      ]);
+      setPendingSkipToForm(true);
+      return;
+    }
+
+    if (/(take me to the intake form|take me to the form|open the intake form|go to the intake form|go to the full form|skip to the form|take me to the full form)/.test(normalized)) {
+      setMessages((current) => [
+        ...current,
+        { role: 'user', text: trimmed },
+        { role: 'assistant', text: 'I can do that. Are you sure you want to leave the chat and open the full intake form now?' },
+      ]);
+      setInputValue('');
+      setPendingSkipToForm(true);
+      return;
+    }
+
     const sideQuestionResponse =
       !answerLooksLikeProfileContent(trimmed, currentQuestionIndex)
-        ? getSideQuestionResponse(trimmed, currentQuestionIndex)
+        ? getSideQuestionResponse(trimmed, currentQuestionIndex, questions)
         : '';
 
     if (sideQuestionResponse) {
@@ -650,9 +940,9 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
           question: [
             'ONBOARDING MODE: true',
             `USER ANSWER: ${trimmed}`,
-            `CURRENT QUESTION: ${agentQuestions[currentQuestionIndex]}`,
+            `CURRENT QUESTION: ${questions[currentQuestionIndex]}`,
             'SIDE QUESTION: yes',
-            `GUIDE THE USER BACK TO: ${agentQuestions[currentQuestionIndex]}`,
+            `GUIDE THE USER BACK TO: ${questions[currentQuestionIndex]}`,
           ].join('\n'),
           language,
           submittedProfile: draft,
@@ -677,40 +967,25 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
 
     const nextAnswerHistory = [...answerHistory, trimmed];
 
-    if (currentQuestionIndex === 0) {
-      nextDraft.businessType = inferBusinessType(trimmed);
-      nextDraft.businessName = draft.businessName || inferBusinessName(trimmed);
-      nextDraft.agricultureSubType = draft.agricultureSubType || inferAgricultureSubType(trimmed);
-      nextDraft.additionalContext = appendContext('', trimmed);
-      if (nextDraft.businessType === 'farm') {
-        nextDraft.ruralArea = 'yes';
-      }
+    const inferredSignals = extractProfileSignals(trimmed, currentQuestionIndex);
+    nextDraft.businessType = inferredSignals.businessType || nextDraft.businessType;
+    nextDraft.businessName = inferredSignals.businessName || nextDraft.businessName;
+    nextDraft.agricultureSubType = inferredSignals.agricultureSubType || nextDraft.agricultureSubType;
+    nextDraft.country = inferredSignals.country || nextDraft.country;
+    nextDraft.region = inferredSignals.region || nextDraft.region;
+    nextDraft.ruralArea = inferredSignals.ruralArea || nextDraft.ruralArea;
+    nextDraft.businessSize = inferredSignals.businessSize || nextDraft.businessSize;
+    nextDraft.yearsInOperation = inferredSignals.yearsInOperation || nextDraft.yearsInOperation;
+    nextDraft.grantScopePreference = inferredSignals.grantScopePreference || nextDraft.grantScopePreference;
+    nextDraft.specialTags = Array.from(new Set([...nextDraft.specialTags, ...inferredSignals.specialTags]));
+    if (inferredSignals.mainGoal) {
+      nextDraft.mainGoal = inferredSignals.mainGoal;
+      nextDraft.otherMainGoal = inferredSignals.mainGoal === 'other' ? trimmed : '';
     }
+    nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
 
-    if (currentQuestionIndex === 1) {
-      const location = inferCountryAndRegion(trimmed);
-      nextDraft.country = location.country || nextDraft.country;
-      nextDraft.region = location.region || nextDraft.region;
-      nextDraft.ruralArea = inferRuralArea(trimmed) || nextDraft.ruralArea;
-      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
-    }
-
-    if (currentQuestionIndex === 2) {
-      nextDraft.businessSize = inferBusinessSize(trimmed) || nextDraft.businessSize;
-      nextDraft.yearsInOperation = inferYearsInOperation(trimmed) || nextDraft.yearsInOperation;
-      nextDraft.specialTags = Array.from(new Set([
-        ...nextDraft.specialTags,
-        ...inferSpecialTags(trimmed),
-      ]));
-      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
-    }
-
-    if (currentQuestionIndex === 3) {
-      const inferredGoal = inferGoal(trimmed);
-      nextDraft.mainGoal = inferredGoal || nextDraft.mainGoal;
-      nextDraft.otherMainGoal = inferredGoal === 'other' ? trimmed : '';
-      nextDraft.grantScopePreference = inferGrantScope(trimmed) || nextDraft.grantScopePreference;
-      nextDraft.additionalContext = appendContext(nextDraft.additionalContext, trimmed);
+    if (nextDraft.businessType === 'farm' && !nextDraft.ruralArea) {
+      nextDraft.ruralArea = 'yes';
     }
 
     nextDraft.preferredLanguage = language || defaultLanguage;
@@ -740,6 +1015,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
               nextQuestionIndex: currentQuestionIndex,
               nextDraft,
               shouldComplete: false,
+              questions,
             }),
             'ASK CLARIFICATION: yes',
             `CLARIFICATION TARGET: ${clarificationPrompt}`,
@@ -763,7 +1039,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
       return;
     }
 
-    const reachedQuestionLimit = currentQuestionIndex >= agentQuestions.length - 1;
+    const reachedQuestionLimit = currentQuestionIndex >= questions.length - 1;
 
     if (reachedQuestionLimit) {
       const summaryParts = buildSummaryParts(nextDraft, copy);
@@ -782,6 +1058,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             nextQuestionIndex: currentQuestionIndex,
             nextDraft,
             shouldComplete: true,
+            questions,
           }),
           language,
           submittedProfile: nextDraft,
@@ -806,7 +1083,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
     const nextQuestionIndex = currentQuestionIndex + 1;
     const friendlyAck = getFriendlyAck(currentQuestionIndex, nextDraft, trimmed, copy);
     const nextLead = getNextQuestionLead(nextQuestionIndex, nextDraft);
-    const fallbackReply = [friendlyAck, nextLead, agentQuestions[nextQuestionIndex]].filter(Boolean).join(' ');
+    const fallbackReply = [friendlyAck, nextLead, questions[nextQuestionIndex]].filter(Boolean).join(' ');
     setMessages(nextMessages);
     setCurrentQuestionIndex(nextQuestionIndex);
     setClarificationCounts((current) => ({ ...current, [currentQuestionIndex]: 0 }));
@@ -820,6 +1097,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
           nextQuestionIndex,
           nextDraft,
           shouldComplete: false,
+          questions,
         }),
         language,
         submittedProfile: nextDraft,
@@ -866,13 +1144,13 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             <SeraphinaAvatar className="agent-bot-svg" />
           </div>
           <div>
-            <p className="eyebrow">AI Guide</p>
-            <h2 id="agent-title">Meet Seraphina</h2>
+            <p className="eyebrow">{ui.guideEyebrow}</p>
+            <h2 id="agent-title">{ui.title}</h2>
             <p className="panel-copy">
-              Seraphina will ask a few quick questions to understand your business, then help you start the full form with some details already filled in.
+              {ui.intro}
             </p>
             <div className="agent-language-row">
-              <label htmlFor="agentPreferredLanguage">Preferred language</label>
+              <label htmlFor="agentPreferredLanguage">{ui.languageLabel}</label>
               <select
                 id="agentPreferredLanguage"
                 value={draft.preferredLanguage}
@@ -920,16 +1198,16 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
             value={inputValue}
             onChange={(event) => setInputValue(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your reply here..."
+            placeholder={ui.replyPlaceholder}
             disabled={isComplete || isTyping}
           />
           <div className="agent-input-actions">
             <p className="agent-input-hint">
-              {isTyping ? 'Seraphina is replying…' : 'Press Enter to send, or Shift+Enter for a new line.'}
+              {isTyping ? ui.replyTyping : ui.replyHint}
             </p>
             <div className="agent-input-buttons">
               <button type="submit" className="primary-button" disabled={isComplete || isTyping}>
-                {isComplete ? 'Opening form…' : isTyping ? 'Thinking…' : 'Send'}
+                {isComplete ? ui.openingForm : isTyping ? ui.thinking : ui.send}
               </button>
               <button
                 type="button"
@@ -937,7 +1215,7 @@ function AgentOnboardingPanel({ language, onLanguageChange, onComplete, onSkip }
                 onClick={onSkip}
                 disabled={isComplete || isTyping}
               >
-                Skip to full form
+                {ui.skip}
               </button>
             </div>
           </div>

@@ -844,14 +844,19 @@ function FundingMatchesPanel({
             <div className="result-overlay" role="dialog" aria-modal="true" aria-labelledby={`result-overlay-title-${activeResult.id}`}>
               <div className="result-overlay-backdrop" onClick={closeResultDetail} />
               <div className="result-overlay-panel">
+                <button
+                  type="button"
+                  className="result-overlay-close"
+                  onClick={closeResultDetail}
+                  aria-label={copy.backToResults || 'Back to results'}
+                >
+                  ×
+                </button>
                 <div className="result-overlay-header">
                   <div>
                     <p className="summary-kicker">{copy.topMatch}</p>
                     <h3 id={`result-overlay-title-${activeResult.id}`}>{activeResult.name}</h3>
                   </div>
-                  <button type="button" className="secondary-button secondary-button-quiet" onClick={closeResultDetail}>
-                    {copy.backToResults || 'Back to results'}
-                  </button>
                 </div>
 
                 <div className="result-overlay-actions">

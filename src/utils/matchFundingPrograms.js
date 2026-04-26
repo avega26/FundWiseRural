@@ -40,6 +40,8 @@ function scoreProgram(program, profile) {
 
   if (program.supportedSizes.includes(profile.businessSize)) {
     score += 2;
+  } else if (profile.businessSize) {
+    score -= 2;
   }
 
   if (program.ruralRequired && profile.ruralArea === 'yes') {

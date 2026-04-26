@@ -15,7 +15,7 @@ import {
 } from '../i18n/translations';
 
 const initialFormData = {
-  preferredLanguage: '',
+  preferredLanguage: defaultLanguage,
   businessName: '',
   country: '',
   region: '',
@@ -98,6 +98,14 @@ const demoProfiles = {
   },
 };
 
+const prefillNotes = {
+  en: 'The AI guide prefilled a few fields for you. Review and adjust anything before running the full recommendation flow.',
+  es: 'La guía de IA ha rellenado algunos campos por usted. Revise y ajuste lo necesario antes de ejecutar la recomendación completa.',
+  it: 'La guida IA ha precompilato alcuni campi per lei. Controlli e modifichi ciò che serve prima di avviare la raccomandazione completa.',
+  pl: 'Przewodnik AI uzupełnił już kilka pól. Sprawdź je i popraw, jeśli trzeba, zanim uruchomisz pełne rekomendacje.',
+  fr: 'Le guide IA a prérempli quelques champs pour vous. Vérifiez-les et ajustez-les avant de lancer la recommandation complète.',
+};
+
 function BusinessProfilePanel({
   onSubmitProfile,
   language,
@@ -117,7 +125,12 @@ function BusinessProfilePanel({
 
   useEffect(() => {
     if (!initialProfile) {
-      return;
+      setFormData((currentData) =>
+        currentData.preferredLanguage
+          ? currentData
+          : { ...currentData, preferredLanguage: language || defaultLanguage },
+      );
+      return undefined;
     }
 
     setFormData((currentData) => ({
@@ -215,7 +228,7 @@ function BusinessProfilePanel({
           <p className="panel-copy">{copy.intakeDescription}</p>
           {initialProfile && (
             <p className="agent-prefill-note">
-              The AI guide prefilled a few fields for you. Review and adjust anything before running the full recommendation flow.
+              {prefillNotes[language] || prefillNotes.en}
             </p>
           )}
         </div>
@@ -234,6 +247,7 @@ function BusinessProfilePanel({
                 name="preferredLanguage"
                 value={formData.preferredLanguage}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {languageOptions.map((option) => (
@@ -258,6 +272,7 @@ function BusinessProfilePanel({
                 value={formData.businessName}
                 onChange={handleInputChange}
                 placeholder={copy.businessNamePlaceholder}
+                required
               />
             </div>
 
@@ -269,6 +284,7 @@ function BusinessProfilePanel({
                 name="country"
                 value={formData.country}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {countryOptions.map((option) => (
@@ -287,6 +303,7 @@ function BusinessProfilePanel({
                 name="region"
                 value={formData.region}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.regionPlaceholder}</option>
                 {availableRegions.map((region) => (
@@ -305,6 +322,7 @@ function BusinessProfilePanel({
                 name="businessType"
                 value={formData.businessType}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {businessTypeOptions.map((option) => (
@@ -324,6 +342,7 @@ function BusinessProfilePanel({
                   name="agricultureSubType"
                   value={formData.agricultureSubType}
                   onChange={handleInputChange}
+                  required
                 >
                   <option value="">{copy.selectPlaceholder}</option>
                   {agricultureSubTypeOptions.map((option) => (
@@ -343,6 +362,7 @@ function BusinessProfilePanel({
                 name="businessSize"
                 value={formData.businessSize}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {businessSizeOptions.map((option) => (
@@ -361,6 +381,7 @@ function BusinessProfilePanel({
                 name="yearsInOperation"
                 value={formData.yearsInOperation}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {yearsOptions.map((option) => (
@@ -379,6 +400,7 @@ function BusinessProfilePanel({
                 name="mainGoal"
                 value={formData.mainGoal}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {mainGoalOptions.map((option) => (
@@ -400,6 +422,7 @@ function BusinessProfilePanel({
                   value={formData.otherMainGoal}
                   onChange={handleInputChange}
                   placeholder={copy.otherMainGoalPlaceholder}
+                  required
                 />
               </div>
             )}
@@ -412,6 +435,7 @@ function BusinessProfilePanel({
                 name="ruralArea"
                 value={formData.ruralArea}
                 onChange={handleInputChange}
+                required
               >
                 <option value="">{copy.selectPlaceholder}</option>
                 {ruralAreaOptions.map((option) => (
@@ -440,6 +464,7 @@ function BusinessProfilePanel({
                         className="tag-help-dot"
                         title={copy.tagDescriptions?.[tag.labelKey] || ''}
                         aria-label={copy.tagDescriptions?.[tag.labelKey] || ''}
+                        data-tooltip={copy.tagDescriptions?.[tag.labelKey] || ''}
                         tabIndex="0"
                       >
                         ?
